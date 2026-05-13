@@ -731,6 +731,9 @@ header {
       </div>
       <div class="field"><label>Crew rate ($/hr) — 2-man crew</label>
         <input type="number" id="lo-rate" value="150" min="50" max="500"></div>
+      <div class="check-group">
+        <label class="check-item"><input type="checkbox" id="lo-takeoff"> Add material takeoff charge ($249)</label>
+      </div>
       <div class="field"><label>Notes</label>
         <textarea id="lo-notes" placeholder="e.g. tight access, second storey, existing structure…"></textarea>
       </div>
@@ -1449,16 +1452,17 @@ function calculateLabour() {
     return;
   }
 
-  const labourBase  = totalHours * crewRate;
-  const withOH      = labourBase * (1 + margins.overhead_pct / 100);
-  const withProfit  = withOH    * (1 + margins.profit_pct   / 100);
-  const subtotal    = Math.round(withProfit);
-  const gstAmount   = Math.round(subtotal * margins.gst_pct / 100);
-  const total       = subtotal + gstAmount;
+  const labourBase   = totalHours * crewRate;
+  const withOH       = labourBase * (1 + margins.overhead_pct / 100);
+  const withProfit   = withOH    * (1 + margins.profit_pct   / 100);
+  const takeoff      = document.getElementById('lo-takeoff').checked ? 249 : 0;
+  const subtotal     = Math.round(withProfit) + takeoff;
+  const gstAmount    = Math.round(subtotal * margins.gst_pct / 100);
+  const total        = subtotal + gstAmount;
 
   renderLabourResult({ label, breakdown, totalHours, crewRate, labourBase, notes,
     oh: margins.overhead_pct, profit: margins.profit_pct, gst: margins.gst_pct,
-    subtotal, gstAmount, total, difficulty });
+    subtotal, gstAmount, total, difficulty, takeoff });
 }
 
 function renderLabourResult(d) {
@@ -1526,6 +1530,10 @@ function renderLabourResult(d) {
         <span class="e-tot-lbl">Profit (${d.profit}%)</span>
         <span class="e-tot-amt">${fmt(profitAmt)}</span>
       </div>
+      ${d.takeoff ? `<div class="e-tot-row">
+        <span class="e-tot-lbl">Material takeoff</span>
+        <span class="e-tot-amt">${fmt(d.takeoff)}</span>
+      </div>` : ''}
       <div class="e-tot-row subtotal">
         <span class="e-tot-lbl">Subtotal</span>
         <span class="e-tot-amt">${fmt(d.subtotal)}</span>
@@ -1549,17 +1557,20 @@ function renderLabourResult(d) {
 
   // Build lastEstimate so saveAsPDF() works on the labour tab.
   // Each task gets a proportional share of the fully-loaded subtotal.
+  const labourSubtotal = d.subtotal - d.takeoff;
   const pdfSections = d.breakdown.map(item => ({
     name: item.name,
-    total: Math.round((item.hours / d.totalHours) * d.subtotal),
+    total: Math.round((item.hours / d.totalHours) * labourSubtotal),
     tbd: false,
   }));
   // Fix rounding drift on last section
   const sectionSum = pdfSections.reduce((a, s) => a + s.total, 0);
-  if (pdfSections.length > 0) pdfSections[pdfSections.length - 1].total += d.subtotal - sectionSum;
+  if (pdfSections.length > 0) pdfSections[pdfSections.length - 1].total += labourSubtotal - sectionSum;
+  if (d.takeoff) pdfSections.push({ name: 'Material takeoff', total: d.takeoff, tbd: false });
 
   const pdfNotes = ['Labour only — materials excluded.',
     `2-man crew @ ${fmt(d.crewRate)}/hr · ${d.totalHours.toFixed(1)} crew hours · ${d.difficulty} site.`];
+  if (d.takeoff) pdfNotes.push('Includes $249 material takeoff charge.');
   if (d.notes) pdfNotes.push(d.notes);
 
   lastEstimate = {
@@ -1628,6 +1639,7 @@ function clearAll() {
   document.getElementById('lo-d-rail-lf').style.display   = 'none';
   document.getElementById('lo-d-stair-set').style.display = 'none';
   document.getElementById('lo-f-gate-count').style.display = 'none';
+  document.getElementById('lo-takeoff').checked = false;
 }
 </script>
 </body>
