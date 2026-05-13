@@ -281,9 +281,16 @@ DECK — STAIRS (per set):
 
 FENCE — FOUNDATION:
 - Post spacing: default 8ft (6ft for vinyl or high-wind areas)
-- Post count = (linear ft / spacing) + 1, add 1 per gate
-- Each post: 1 sonotube (8") + 2 bags fast-set concrete
+- Post count = (linear ft / spacing) + 1, add 1 per man gate, add 2 per vehicle gate
+- Each standard post: 1 sonotube (8") + 2 bags fast-set concrete
 - Post depth: min 3ft in Alberta frost line
+
+FENCE — VEHICLE GATES (20ft double swing):
+- Each vehicle gate needs 2× dedicated 4x6 gate posts (NOT counted in the regular post run)
+- Each gate post: 1 sonotube (10") + 3 bags fast-set concrete (heavier load)
+- Gate unit: 20ft double-swing gate — flag as TBD (price varies by material; Owen to get supplier quote)
+- Hardware per gate: heavy-duty hinge kit (6 hinges total), drop rod/cane bolt, heavy gate latch
+- Output as a separate "Vehicle Gate" section, marked tbd: true
 
 FENCE — FRAMING:
 - Wood/vinyl: 3 rails per bay (top, mid, bottom) for 6ft fence; 2 rails for 4ft

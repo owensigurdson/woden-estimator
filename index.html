@@ -546,7 +546,7 @@ header {
 
       <div class="section-label">Add-ons</div>
       <div class="row">
-        <div class="field"><label>Gates (count)</label>
+        <div class="field"><label>Man gates (count)</label>
           <input type="number" id="f-gates" value="0" min="0" max="10"></div>
         <div class="field"><label>Gate width</label>
           <div class="toggle-group">
@@ -555,6 +555,8 @@ header {
             <div class="toggle" onclick="tog(this,'f-gw')">8 ft dbl</div>
           </div></div>
       </div>
+      <div class="field"><label>Vehicle gates — 20ft double swing (count)</label>
+        <input type="number" id="f-vgates" value="0" min="0" max="5"></div>
 
       <div class="field"><label>Site difficulty</label>
         <div class="toggle-group">
@@ -669,11 +671,16 @@ header {
           <label class="check-item"><input type="checkbox" id="lo-f-posts" checked> Posts (dig, set, concrete)</label>
           <label class="check-item"><input type="checkbox" id="lo-f-rails" checked> Rails</label>
           <label class="check-item"><input type="checkbox" id="lo-f-boards" checked> Boards / Panels</label>
-          <label class="check-item"><input type="checkbox" id="lo-f-gates"> Gates</label>
+          <label class="check-item"><input type="checkbox" id="lo-f-gates"> Man gates</label>
+          <label class="check-item"><input type="checkbox" id="lo-f-vgates"> Vehicle gates (20ft)</label>
         </div>
         <div class="field" id="lo-f-gate-count" style="display:none">
-          <label>Number of gates</label>
+          <label>Number of man gates</label>
           <input type="number" id="lo-f-gc" value="1" min="1" max="10">
+        </div>
+        <div class="field" id="lo-f-vgate-count" style="display:none">
+          <label>Number of vehicle gates</label>
+          <input type="number" id="lo-f-vgc" value="1" min="1" max="5">
         </div>
 
         <div class="section-label">Dimensions</div>
@@ -850,6 +857,7 @@ function collectFenceData() {
     fence_height: getActive('[onclick*="f-height"]'),
     gate_count: document.getElementById('f-gates').value,
     gate_width: getActive('[onclick*="f-gw"]'),
+    vehicle_gate_count: document.getElementById('f-vgates').value,
     site_difficulty: getActive('[onclick*="f-site"]'),
     notes: document.getElementById('f-notes').value,
   };
@@ -1309,6 +1317,11 @@ document.getElementById('lo-f-gates').addEventListener('change', function() {
   el.style.display = this.checked ? 'flex' : 'none';
   if (this.checked) el.style.flexDirection = 'column';
 });
+document.getElementById('lo-f-vgates').addEventListener('change', function() {
+  const el = document.getElementById('lo-f-vgate-count');
+  el.style.display = this.checked ? 'flex' : 'none';
+  if (this.checked) el.style.flexDirection = 'column';
+});
 
 // Production rates — 2-man crew hours
 const LO_RATES = {
@@ -1327,6 +1340,7 @@ const LO_RATES = {
     vinyl_panel_per_lf: 0.03,
     chain_link_per_lf:  0.025,
     gate_per_gate:      1.25,
+    vehicle_gate_per_gate: 4.0,
   },
   landscape: {
     sod_per_sqft:     0.002,
@@ -1412,7 +1426,11 @@ function calculateLabour() {
     }
     if (document.getElementById('lo-f-gates').checked) {
       const gc = parseInt(document.getElementById('lo-f-gc').value) || 1;
-      addItem(`Gates (${gc})`, gc * R.gate_per_gate * diffMult);
+      addItem(`Man gates (${gc})`, gc * R.gate_per_gate * diffMult);
+    }
+    if (document.getElementById('lo-f-vgates').checked) {
+      const vgc = parseInt(document.getElementById('lo-f-vgc').value) || 1;
+      addItem(`Vehicle gates 20ft (${vgc})`, vgc * R.vehicle_gate_per_gate * diffMult);
     }
 
   } else {
@@ -1573,6 +1591,7 @@ function clearAll() {
   document.getElementById('f-label').value = '';
   document.getElementById('f-lf').value = '';
   document.getElementById('f-gates').value = '0';
+  document.getElementById('f-vgates').value = '0';
   document.getElementById('f-notes').value = '';
   document.getElementById('l-label').value = '';
   document.getElementById('l-area').value = '';
@@ -1599,7 +1618,10 @@ function clearAll() {
   document.getElementById('lo-f-posts').checked  = true;
   document.getElementById('lo-f-rails').checked  = true;
   document.getElementById('lo-f-boards').checked = true;
-  document.getElementById('lo-f-gates').checked  = false;
+  document.getElementById('lo-f-gates').checked   = false;
+  document.getElementById('lo-f-vgates').checked  = false;
+  document.getElementById('lo-f-vgc').value       = '1';
+  document.getElementById('lo-f-vgate-count').style.display = 'none';
   document.getElementById('lo-l-sod').checked     = false;
   document.getElementById('lo-l-topsoil').checked = false;
   document.getElementById('lo-l-mulch').checked   = false;
