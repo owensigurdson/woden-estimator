@@ -3,6 +3,7 @@ import json
 import os
 import re
 import sys
+import time
 import webbrowser
 from pathlib import Path
 from threading import Timer
@@ -26,6 +27,82 @@ if not api_key:
 
 client = anthropic.Anthropic(api_key=api_key)
 app = FastAPI()
+
+# ── Live price cache ──────────────────────────────────────────────────────────
+_price_cache: dict = {}   # job_type -> (timestamp, prices_str)
+PRICE_CACHE_TTL = 3600    # re-fetch after 1 hour
+
+_MATERIAL_QUERIES = {
+    "deck": (
+        "pressure treated lumber: 5/4x6 deck boards, 2x8 joists, 2x10, 2x12, 6x6 posts; "
+        "sonotubes 10-inch and 12-inch; Quikrete fast-set concrete 30kg bags; "
+        "Trex Enhance Basics composite decking; Trex Select composite decking; "
+        "aluminum deck railing panels; ABA66 post base hardware"
+    ),
+    "fence": (
+        "1x6 cedar fence boards 6ft; 4x4 cedar fence posts 8ft; 4x6 cedar posts 8ft; "
+        "2x4x8 fence rails; 8-inch sonotubes; Quikrete fast-set concrete 30kg; "
+        "vinyl privacy fence panels 6ft; chain link fence mesh per linear foot"
+    ),
+    "landscape": (
+        "Kentucky bluegrass sod per square foot or per roll; "
+        "triple mix topsoil per cubic yard; "
+        "cedar mulch per cubic yard; pine bark mulch per cubic yard"
+    ),
+}
+
+
+def fetch_live_prices(job_type: str) -> str:
+    """Call Claude with web search to get current Calgary-area material prices."""
+    materials = _MATERIAL_QUERIES.get(job_type, _MATERIAL_QUERIES["deck"])
+    prompt = (
+        f"Search Home Depot Canada (homedepot.ca) and Rona (rona.ca) for current 2025 "
+        f"retail prices in Calgary, Alberta for these building materials:\n\n{materials}\n\n"
+        "Return a concise price list only — no commentary. Format each line as:\n"
+        "Item name | size or unit | price in CAD"
+    )
+    try:
+        response = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=1000,
+            tools=[{
+                "type": "web_search_20250305",
+                "name": "web_search",
+                "max_uses": 3,
+                "user_location": {
+                    "type": "approximate",
+                    "city": "Calgary",
+                    "region": "Alberta",
+                    "country": "CA",
+                    "timezone": "America/Edmonton",
+                },
+            }],
+            messages=[{"role": "user", "content": prompt}],
+        )
+        parts = [b.text for b in response.content if hasattr(b, "text") and b.text]
+        result = "\n".join(parts).strip()
+        if result:
+            print(f"[prices] live fetch OK for '{job_type}'", flush=True)
+        return result
+    except Exception as e:
+        print(f"[prices] live fetch failed ({e}), using prices.json", flush=True)
+        return ""
+
+
+def get_live_prices(job_type: str) -> str:
+    """Return cached prices if fresh, otherwise fetch new ones."""
+    now = time.time()
+    cached = _price_cache.get(job_type)
+    if cached:
+        ts, prices = cached
+        age_min = int((now - ts) / 60)
+        if now - ts < PRICE_CACHE_TTL:
+            print(f"[prices] using cache for '{job_type}' ({age_min}m old)", flush=True)
+            return prices
+    prices = fetch_live_prices(job_type)
+    if prices:
+        _price_cache[job_type] = (now, prices)
+    return prices
 
 class BasicAuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -206,12 +283,22 @@ def load_prices() -> str:
         return f"(prices.json not found: {e})"
 
 
-def build_system_prompt() -> str:
-    prices = load_prices()
+def build_system_prompt(live_prices: str = "") -> str:
+    static_prices = load_prices()
+
+    if live_prices:
+        price_section = (
+            f"━━━ LIVE MARKET PRICES (fetched today from Canadian retailers) ━━━\n"
+            f"{live_prices}\n\n"
+            f"━━━ BASELINE SUPPLIER PRICES (fallback for any items not covered above) ━━━\n"
+            f"{static_prices}"
+        )
+    else:
+        price_section = f"━━━ CURRENT SUPPLIER PRICES ━━━\n{static_prices}"
+
     return f"""You are an internal estimating assistant for Woden Contracting — a decks, fences, and landscaping contractor in Alberta, Canada. You generate detailed, layer-by-layer material takeoffs for Owen.
 
-━━━ CURRENT SUPPLIER PRICES ━━━
-{prices}
+{price_section}
 
 ━━━ ALBERTA BUILDING CODE COMPLIANCE (2023 NBC Alberta Edition) ━━━
 
@@ -351,10 +438,14 @@ class EstimateRequest(BaseModel):
 @app.post("/estimate")
 async def estimate(req: EstimateRequest):
     try:
-        system = build_system_prompt()
+        job_type = req.job_data.get("job_type", "deck")
+
+        # Fetch live prices for the first message of each conversation.
+        # Follow-ups reuse the cache so they don't incur an extra search.
+        live_prices = get_live_prices(job_type)
+        system = build_system_prompt(live_prices)
 
         job_json = json.dumps(req.job_data, indent=2)
-        job_type = req.job_data.get("job_type", "deck")
 
         messages = [{"role": m.role, "content": m.content} for m in req.messages]
 
