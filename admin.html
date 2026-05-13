@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Woden Price Manager</title>
+<link rel="icon" type="image/x-icon" href="woden.ico">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0d1017; --panel: #12151e; --card: #171b27;
+  --border: #1e2336; --border2: #262d45; --text: #d8dded;
+  --muted: #5a6385; --accent: #3a50c8; --accent2: #4a60d8;
+  --green: #6dbf7a; --amber: #e0a44a; --label: #8898cc;
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 13px; }
+
+header {
+  background: var(--panel); border-bottom: 1px solid var(--border);
+  height: 48px; padding: 0 20px; display: flex; align-items: center;
+  gap: 12px; position: sticky; top: 0; z-index: 100;
+}
+.logo { font-size: 13px; font-weight: 700; letter-spacing: 0.1em; color: #fff; }
+.logo span { color: #5c7cfa; }
+.hdivider { width: 1px; height: 20px; background: var(--border2); flex-shrink: 0; }
+.updated-badge { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.ml-auto { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.btn {
+  border: 1px solid var(--border2); border-radius: 5px; padding: 5px 14px;
+  font-size: 12px; cursor: pointer; letter-spacing: 0.04em;
+  background: transparent; color: var(--label); white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); color: var(--text); }
+.btn:disabled { opacity: 0.4; cursor: default; }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.btn-primary:hover:not(:disabled) { background: var(--accent2); }
+.back-link { font-size: 12px; color: var(--muted); text-decoration: none; }
+.back-link:hover { color: var(--label); }
+
+.flash {
+  padding: 0; max-height: 0; overflow: hidden;
+  font-size: 12px; text-align: center; transition: all 0.2s; flex-shrink: 0;
+}
+.flash.show { padding: 8px 20px; max-height: 44px; }
+.flash.ok  { background: #0b1910; border-bottom: 1px solid #1a3820; color: var(--green); }
+.flash.warn { background: #1a1408; border-bottom: 1px solid #3a2e10; color: var(--amber); }
+.flash.err { background: #1a0808; border-bottom: 1px solid #3a1010; color: #e07050; }
+
+.content { max-width: 940px; margin: 0 auto; padding: 24px 20px 80px; display: flex; flex-direction: column; gap: 20px; }
+
+.supplier-block { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.supplier-header {
+  background: #0f1220; border-bottom: 1px solid var(--border);
+  padding: 11px 16px; display: flex; align-items: center; gap: 10px;
+}
+.supplier-name { font-size: 11px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #5c7cfa; }
+.supplier-link { font-size: 11px; color: #2a3555; text-decoration: none; margin-left: auto; }
+.supplier-link:hover { color: var(--muted); }
+
+.category-block { border-bottom: 1px solid var(--border); }
+.category-block:last-child { border-bottom: none; }
+.category-header {
+  padding: 7px 16px; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
+  background: #0d1019; border-bottom: 1px solid var(--border);
+}
+
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left; padding: 6px 14px; font-size: 10px;
+  font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  color: #2e3860; border-bottom: 1px solid var(--border);
+}
+td { padding: 5px 14px; border-bottom: 1px solid #141828; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+td.col-name  { font-size: 12px; color: #6878a0; width: 36%; }
+td.col-unit  { font-size: 12px; color: #2e3860; width: 10%; }
+td.col-price { width: 16%; }
+td.col-note  { width: 28%; }
+td.col-badge { width: 10%; text-align: right; }
+
+.price-input, .note-input {
+  width: 100%; background: var(--bg); border: 1px solid var(--border2);
+  border-radius: 4px; color: var(--text); padding: 4px 8px;
+  font-size: 12px; font-family: inherit;
+}
+.price-input:focus, .note-input:focus { outline: none; border-color: var(--accent); }
+.price-input.is-est  { color: var(--amber); }
+.price-input.is-null { color: #3a4060; }
+.price-input.is-live { border-color: var(--green); color: var(--green); background: #080f0a; }
+
+.badge {
+  display: inline-block; font-size: 9px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 2px 6px; border-radius: 3px;
+}
+.badge-est  { background: #1a1408; color: var(--amber); border: 1px solid #3a2e10; }
+.badge-null { background: #1a0e0a; color: #c06040; border: 1px solid #3a1a10; }
+.badge-live { background: #080f0a; color: var(--green); border: 1px solid #1a3820; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Woden <span>Prices</span></div>
+  <div class="hdivider"></div>
+  <div class="updated-badge">Last updated: <span id="lastUpdated">—</span></div>
+  <div class="ml-auto">
+    <button class="btn" id="fetchBtn" onclick="checkWebPrices()">Check Web Prices</button>
+    <button class="btn btn-primary" id="saveBtn" onclick="saveAll()">Save All</button>
+    <div class="hdivider"></div>
+    <a class="back-link" href="/">← Estimator</a>
+  </div>
+</header>
+
+<div class="flash" id="flash"></div>
+
+<div class="content" id="content">
+  <div style="color:var(--muted);font-size:12px;padding:20px 0;">Loading prices…</div>
+</div>
+
+<script>
+const SCHEMA = [
+  {
+    key: 'home_depot', label: 'Home Depot', nested: true,
+    url: 'https://www.homedepot.ca/en/home/categories/building-materials/lumber-and-composites.html',
+    categories: [
+      { key: 'pt_lumber',       label: 'PT Lumber',               url: 'https://www.homedepot.ca/en/home/categories/building-materials/lumber-and-composites/pressure-treated-lumber.html' },
+      { key: 'pt_decking',      label: 'PT Decking',              url: 'https://www.homedepot.ca/en/home/categories/building-materials/decking/deck-boards.html' },
+      { key: 'trex_composite',  label: 'Composite Decking (Trex)',url: 'https://www.homedepot.ca/en/home/brands/trex.html' },
+      { key: 'fence_materials', label: 'Fence Materials',         url: 'https://www.homedepot.ca/en/home/categories/building-materials/fencing.html' },
+      { key: 'concrete',        label: 'Concrete',                url: 'https://www.homedepot.ca/en/home/categories/building-materials/concrete-cement-and-masonry.html' },
+      { key: 'tube_forms',      label: 'Sonotubes',               url: 'https://www.homedepot.ca/en/home/categories/building-materials/concrete-cement-and-masonry/concrete-materials-tools-and-accessories/concrete-forming-products.html' },
+      { key: 'hardware',        label: 'Hardware',                url: 'https://www.homedepot.ca/en/home/categories/building-materials/structural-hardware.html' },
+    ]
+  },
+  {
+    key: 'bluegrass', label: 'Bluegrass', nested: false,
+    url: 'https://bluegrasssod.ca',
+    categories: [{ key: null, label: 'Landscaping Materials' }]
+  },
+  {
+    key: 'home_rail', label: 'Home Rail', nested: false,
+    url: null,
+    categories: [{ key: null, label: 'Railings (manual — call for quote)' }]
+  }
+];
+
+let prices = {};
+let liveKeys = new Set();
+
+// ── Flash ──
+let flashTimer;
+function flash(msg, type) {
+  const el = document.getElementById('flash');
+  el.textContent = msg;
+  el.className = 'flash show ' + type;
+  clearTimeout(flashTimer);
+  if (type === 'ok') flashTimer = setTimeout(() => el.className = 'flash', 4000);
+}
+
+// ── Load ──
+async function init() {
+  try {
+    const r = await fetch('/admin/data');
+    const j = await r.json();
+    if (!j.ok) { flash('Failed to load prices: ' + j.error, 'err'); return; }
+    prices = j.data;
+    renderAll();
+  } catch(e) {
+    flash('Cannot reach server: ' + e.message, 'err');
+  }
+}
+
+// ── Render ──
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderAll() {
+  document.getElementById('lastUpdated').textContent = prices.last_updated || '—';
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+
+  for (const sup of SCHEMA) {
+    const block = document.createElement('div');
+    block.className = 'supplier-block';
+
+    const supLink = sup.url
+      ? `<a class="supplier-link" href="${sup.url}" target="_blank">Browse ↗</a>`
+      : '';
+    block.innerHTML = `
+      <div class="supplier-header">
+        <span class="supplier-name">${sup.label}</span>
+        ${supLink}
+      </div>`;
+
+    const data = prices[sup.key] || {};
+
+    for (const cat of sup.categories) {
+      const items = sup.nested ? (data[cat.key] || {}) : data;
+      const catDiv = document.createElement('div');
+      catDiv.className = 'category-block';
+
+      const catLink = cat.url
+        ? `<a class="supplier-link" href="${cat.url}" target="_blank" style="margin-left:auto;font-size:10px;">Check prices ↗</a>`
+        : '';
+      catDiv.innerHTML = `
+        <div class="category-header" style="display:flex;align-items:center;">
+          ${cat.label}${catLink}
+        </div>
+        <table>
+          <thead><tr>
+            <th>Item</th><th>Unit</th><th>Price (CAD)</th><th>Note</th><th></th>
+          </tr></thead>
+          <tbody id="tbody-${sup.key}-${cat.key ?? 'flat'}"></tbody>
+        </table>`;
+      block.appendChild(catDiv);
+
+      const tbody = catDiv.querySelector('tbody');
+      for (const [name, item] of Object.entries(items)) {
+        if (name.startsWith('_')) continue;
+        const pathBase = sup.nested
+          ? `${sup.key}.${cat.key}.${name}`
+          : `${sup.key}.${name}`;
+        const isEst  = typeof item.note === 'string' && item.note.includes('ESTIMATE');
+        const isNull = item.price === null || item.price === undefined;
+        const isLive = liveKeys.has(pathBase);
+
+        let priceClass = 'price-input';
+        if (isLive) priceClass += ' is-live';
+        else if (isNull) priceClass += ' is-null';
+        else if (isEst) priceClass += ' is-est';
+
+        let badge = '';
+        if (isLive) badge = '<span class="badge badge-live">Live</span>';
+        else if (isNull) badge = '<span class="badge badge-null">No price</span>';
+        else if (isEst) badge = '<span class="badge badge-est">Est</span>';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="col-name">${esc(name)}</td>
+          <td class="col-unit">${esc(item.unit || '')}</td>
+          <td class="col-price">
+            <input type="number" step="0.01" min="0"
+                   class="${priceClass}"
+                   data-path="${pathBase}.price"
+                   value="${isNull ? '' : item.price}"
+                   placeholder="${isNull ? 'enter price' : ''}">
+          </td>
+          <td class="col-note">
+            <input type="text" class="note-input"
+                   data-path="${pathBase}.note"
+                   value="${esc(item.note || '')}">
+          </td>
+          <td class="col-badge">${badge}</td>`;
+        tbody.appendChild(tr);
+      }
+    }
+
+    content.appendChild(block);
+  }
+}
+
+// ── Save ──
+async function saveAll() {
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+
+  // Apply all inputs back into prices object
+  document.querySelectorAll('[data-path]').forEach(input => {
+    const parts = input.dataset.path.split('.');
+    const key   = parts.pop();
+    let obj = prices;
+    for (const p of parts) { obj = obj[p]; }
+    if (key === 'price') {
+      obj[key] = input.value === '' ? null : parseFloat(input.value);
+    } else {
+      obj[key] = input.value;
+    }
+  });
+
+  try {
+    const r = await fetch('/admin/save', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(prices),
+    });
+    const j = await r.json();
+    if (j.ok) {
+      flash('Saved — estimator will use new prices immediately.', 'ok');
+      document.getElementById('lastUpdated').textContent = j.last_updated;
+      liveKeys.clear();
+      renderAll();
+    } else {
+      flash('Save failed: ' + j.error, 'err');
+    }
+  } catch(e) {
+    flash('Save error: ' + e.message, 'err');
+  }
+  btn.disabled = false;
+}
+
+// ── Check Web Prices ──
+async function checkWebPrices() {
+  const btn = document.getElementById('fetchBtn');
+  btn.disabled = true;
+  flash('Searching Home Depot, Home Hardware, and Rona… (~30s)', 'warn');
+
+  try {
+    const r = await fetch('/admin/fetch', { method: 'POST' });
+    const j = await r.json();
+
+    if (!j.ok) {
+      flash(j.error || 'Web search failed — update prices manually above.', 'err');
+      btn.disabled = false;
+      return;
+    }
+
+    const updates = j.updates || {};
+    let count = 0;
+
+    // Map fetched categories to the nested prices structure
+    const catMap = {
+      pt_lumber:       ['home_depot', 'pt_lumber'],
+      pt_decking:      ['home_depot', 'pt_decking'],
+      trex_composite:  ['home_depot', 'trex_composite'],
+      fence_materials: ['home_depot', 'fence_materials'],
+      concrete:        ['home_depot', 'concrete'],
+      tube_forms:      ['home_depot', 'tube_forms'],
+      hardware:        ['home_depot', 'hardware'],
+    };
+
+    for (const [cat, itemPrices] of Object.entries(updates)) {
+      if (cat === 'sources' || cat === 'notes' || cat === 'search_date') continue;
+      const path = catMap[cat];
+      if (!path) continue;
+      const [sup, catKey] = path;
+
+      for (const [name, price] of Object.entries(itemPrices)) {
+        if (typeof price !== 'number') continue;
+        const pathBase = `${sup}.${catKey}.${name}`;
+        const input = document.querySelector(`[data-path="${pathBase}.price"]`);
+        if (input) {
+          input.value = price;
+          input.className = 'price-input is-live';
+          liveKeys.add(pathBase);
+          count++;
+
+          // also update the badge cell
+          const td = input.closest('tr')?.querySelector('.col-badge');
+          if (td) td.innerHTML = '<span class="badge badge-live">Live</span>';
+        }
+      }
+    }
+
+    const noteStr = updates.notes ? ` (${updates.notes})` : '';
+    if (count > 0) {
+      flash(`${count} prices updated from web${noteStr}. Review above then hit Save All.`, 'ok');
+    } else {
+      flash('Web search ran but no verified prices were returned — Canadian retailers hide prices behind JavaScript. Update manually above.', 'warn');
+    }
+  } catch(e) {
+    flash('Fetch error: ' + e.message, 'err');
+  }
+  btn.disabled = false;
+}
+
+init();
+</script>
+</body>
+</html>

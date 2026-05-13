@@ -489,6 +489,91 @@ async def estimate(req: EstimateRequest):
         return {"ok": False, "raw": f"Server error: {type(e).__name__}: {e}"}
 
 
+@app.get("/admin", response_class=HTMLResponse)
+async def admin_ui():
+    return Path("admin.html").read_text(encoding="utf-8")
+
+
+@app.get("/admin/data")
+async def admin_data():
+    try:
+        data = json.loads(Path("prices.json").read_text(encoding="utf-8"))
+        return {"ok": True, "data": data}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+@app.post("/admin/save")
+async def admin_save(request: Request):
+    try:
+        from datetime import date as _d2
+        body = await request.json()
+        body["last_updated"] = _d2.today().isoformat()
+        Path("prices.json").write_text(
+            json.dumps(body, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+        _price_cache.clear()
+        return {"ok": True, "last_updated": body["last_updated"]}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+@app.post("/admin/fetch")
+async def admin_fetch():
+    prompt = """Search for current 2025 retail prices in Calgary, Alberta, Canada for building materials.
+Check Home Depot Canada (homedepot.ca), Home Hardware (homehardware.ca), Rona (rona.ca), and any other Canadian retailer you can find actual prices on.
+
+Find prices for as many of these as possible:
+- PT lumber (each): 2x4x8, 2x4x10, 2x6x8, 2x6x10, 2x6x12, 2x6x16, 2x8x12, 2x8x16, 2x10x12, 2x10x16, 2x12x12, 4x4x8, 4x4x10, 4x4x12, 4x6x8, 4x6x10, 4x6x12, 6x6x10
+- PT decking (each): 5/4x6x8, 5/4x6x12, 5/4x6x16
+- Composite (each): Trex Enhance Basics 1x6x12ft, Trex Enhance Basics 1x6x16ft, Trex Select 1x6x12ft, Trex Select 1x6x16ft
+- Fence (each or LF): 1x6x6 PT fence board, 2x4x8 PT rail, 4x4x8 PT fence post, 4x6x8 PT fence post, vinyl fence panel 6ft x 8ft, vinyl fence post 5in x 8ft, gate hardware kit
+- Concrete (each): Quikrete Fast-Setting Mix 30kg, Quikrete Regular Concrete Mix 30kg, Quikrete Fence-n-Post 30kg
+- Sonotubes (each): Sonotube 8in x 4ft, Sonotube 10in x 4ft, Sonotube 12in x 4ft
+- Hardware (each): Simpson LUS26 joist hanger 2x6, Simpson LUS28 joist hanger 2x8, Simpson LUS210 joist hanger 2x10, Simpson ABA44 ZMAX post base 4x4, Simpson ABA66 ZMAX post base 6x6, GRK structural screws 3in (100ct), Stair stringer hardware kit
+
+Return ONLY valid JSON, no other text:
+{
+  "pt_lumber": {"2x4x8": 11.20, "2x8x16": 46.21},
+  "pt_decking": {"5/4x6x16": 25.97},
+  "trex_composite": {},
+  "fence_materials": {},
+  "concrete": {"Quikrete Fast-Setting Mix 30kg": 14.48},
+  "tube_forms": {},
+  "hardware": {},
+  "sources": ["homedepot.ca"],
+  "notes": "brief note"
+}
+Only include items where you found actual dollar prices. Omit categories with no data."""
+    try:
+        response = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=2000,
+            tools=[{
+                "type": "web_search_20250305",
+                "name": "web_search",
+                "max_uses": 5,
+                "user_location": {
+                    "type": "approximate",
+                    "city": "Calgary",
+                    "region": "Alberta",
+                    "country": "CA",
+                    "timezone": "America/Edmonton",
+                },
+            }],
+            messages=[{"role": "user", "content": prompt}],
+        )
+        parts = [b.text for b in response.content if hasattr(b, "text") and b.text]
+        raw = "\n".join(parts).strip()
+        m = re.search(r'\{[\s\S]*\}', raw)
+        if m:
+            updates = json.loads(m.group(0))
+            return {"ok": True, "updates": updates}
+        return {"ok": False, "error": "Web search ran but could not extract prices — update manually."}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
     return FileResponse(Path(__file__).parent / "woden.ico", media_type="image/x-icon")
