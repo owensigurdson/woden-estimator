@@ -578,6 +578,26 @@ header {
         <label class="check-item"><input type="checkbox" id="l-sod"> Sod laying</label>
         <label class="check-item"><input type="checkbox" id="l-topsoil"> Topsoil spreading</label>
         <label class="check-item"><input type="checkbox" id="l-mulch"> Mulching</label>
+        <label class="check-item"><input type="checkbox" id="l-wall"> Block retaining wall</label>
+      </div>
+
+      <div id="l-wall-fields" style="display:none">
+        <div class="section-label">Retaining Wall</div>
+        <div class="field"><label>Wall length (LF)</label>
+          <input type="number" id="l-wall-lf" placeholder="20" min="1"></div>
+        <div class="field"><label>Wall height (courses, each ≈ 8″)</label>
+          <div class="toggle-group">
+            <div class="toggle" onclick="tog(this,'l-wh')">2</div>
+            <div class="toggle active" onclick="tog(this,'l-wh')">3</div>
+            <div class="toggle" onclick="tog(this,'l-wh')">4</div>
+            <div class="toggle" onclick="tog(this,'l-wh')">5</div>
+            <div class="toggle" onclick="tog(this,'l-wh')">6</div>
+          </div></div>
+        <div class="field"><label>Block type</label>
+          <div class="toggle-group">
+            <div class="toggle active" onclick="tog(this,'l-wbt')">Standard block</div>
+            <div class="toggle" onclick="tog(this,'l-wbt')">Allan Block</div>
+          </div></div>
       </div>
 
       <div class="section-label">Area &amp; Depth</div>
@@ -714,10 +734,24 @@ header {
           <label class="check-item"><input type="checkbox" id="lo-l-sod"> Sod laying</label>
           <label class="check-item"><input type="checkbox" id="lo-l-topsoil"> Topsoil spreading</label>
           <label class="check-item"><input type="checkbox" id="lo-l-mulch"> Mulching</label>
+          <label class="check-item"><input type="checkbox" id="lo-l-wall"> Block retaining wall</label>
         </div>
         <div class="section-label">Area</div>
         <div class="field"><label>Area (sq ft)</label>
           <input type="number" id="lo-l-area" placeholder="600" min="1"></div>
+        <div id="lo-l-wall-fields" style="display:none">
+          <div class="section-label">Retaining Wall</div>
+          <div class="field"><label>Wall length (LF)</label>
+            <input type="number" id="lo-l-wall-lf" placeholder="20" min="1"></div>
+          <div class="field"><label>Wall height (courses, each ≈ 8″)</label>
+            <div class="toggle-group">
+              <div class="toggle" onclick="tog(this,'lo-l-wh')">2</div>
+              <div class="toggle active" onclick="tog(this,'lo-l-wh')">3</div>
+              <div class="toggle" onclick="tog(this,'lo-l-wh')">4</div>
+              <div class="toggle" onclick="tog(this,'lo-l-wh')">5</div>
+              <div class="toggle" onclick="tog(this,'lo-l-wh')">6</div>
+            </div></div>
+        </div>
       </div>
 
       <!-- SHARED -->
@@ -873,11 +907,15 @@ function collectLandscapeData() {
     sod: document.getElementById('l-sod').checked,
     topsoil: document.getElementById('l-topsoil').checked,
     mulch: document.getElementById('l-mulch').checked,
+    wall: document.getElementById('l-wall').checked,
     area_sqft: document.getElementById('l-area').value,
     topsoil_depth: getActive('[onclick*="l-td"]'),
     mulch_type: getActive('[onclick*="l-mt"]'),
     mulch_depth: getActive('[onclick*="l-md"]'),
     delivery: getActive('[onclick*="l-delivery"]'),
+    wall_lf: document.getElementById('l-wall-lf').value,
+    wall_courses: getActive('[onclick*="l-wh"]'),
+    wall_block_type: getActive('[onclick*="l-wbt"]'),
     notes: document.getElementById('l-notes').value,
   };
 }
@@ -1325,6 +1363,12 @@ document.getElementById('lo-f-vgates').addEventListener('change', function() {
   el.style.display = this.checked ? 'flex' : 'none';
   if (this.checked) el.style.flexDirection = 'column';
 });
+document.getElementById('l-wall').addEventListener('change', function() {
+  document.getElementById('l-wall-fields').style.display = this.checked ? 'block' : 'none';
+});
+document.getElementById('lo-l-wall').addEventListener('change', function() {
+  document.getElementById('lo-l-wall-fields').style.display = this.checked ? 'block' : 'none';
+});
 
 // Production rates — 2-man crew hours
 const LO_RATES = {
@@ -1346,9 +1390,10 @@ const LO_RATES = {
     vehicle_gate_per_gate: 4.0,
   },
   landscape: {
-    sod_per_sqft:     0.002,
-    topsoil_per_sqft: 0.0017,
-    mulch_per_sqft:   0.001,
+    sod_per_sqft:      0.002,
+    topsoil_per_sqft:  0.0017,
+    mulch_per_sqft:    0.001,
+    wall_per_sqft:     0.030,
   },
 };
 
@@ -1445,6 +1490,14 @@ function calculateLabour() {
       addItem(`Topsoil spreading (${area} sqft)`, area * R.topsoil_per_sqft * diffMult);
     if (document.getElementById('lo-l-mulch').checked && area > 0)
       addItem(`Mulching (${area} sqft)`, area * R.mulch_per_sqft * diffMult);
+    if (document.getElementById('lo-l-wall').checked) {
+      const wallLf      = parseFloat(document.getElementById('lo-l-wall-lf').value) || 0;
+      const wallCourses = parseInt(loGetActive('[onclick*="lo-l-wh"]') || '3');
+      const wallSqft    = wallLf * (wallCourses * 0.667);
+      if (wallSqft > 0)
+        addItem(`Block retaining wall (${wallLf} LF × ${wallCourses} courses)`,
+                wallSqft * R.wall_per_sqft * diffMult);
+    }
   }
 
   if (totalHours === 0) {
@@ -1610,6 +1663,9 @@ function clearAll() {
   document.getElementById('l-sod').checked = false;
   document.getElementById('l-topsoil').checked = false;
   document.getElementById('l-mulch').checked = false;
+  document.getElementById('l-wall').checked = false;
+  document.getElementById('l-wall-fields').style.display = 'none';
+  document.getElementById('l-wall-lf').value = '';
   // Labour tab resets
   document.getElementById('lo-label').value = '';
   document.getElementById('lo-d-len').value = '';
@@ -1636,6 +1692,9 @@ function clearAll() {
   document.getElementById('lo-l-sod').checked     = false;
   document.getElementById('lo-l-topsoil').checked = false;
   document.getElementById('lo-l-mulch').checked   = false;
+  document.getElementById('lo-l-wall').checked    = false;
+  document.getElementById('lo-l-wall-fields').style.display = 'none';
+  document.getElementById('lo-l-wall-lf').value   = '';
   document.getElementById('lo-d-rail-lf').style.display   = 'none';
   document.getElementById('lo-d-stair-set').style.display = 'none';
   document.getElementById('lo-f-gate-count').style.display = 'none';

@@ -1,83 +1,317 @@
 {
   "last_updated": "2026-05-07",
-  "notes": "Prices marked ESTIMATE need verification. Home Rail prices are manual — update when you get a quote.",
+  "notes": "Prices marked ESTIMATE need verification. Home Rail prices are manual \u00e2\u20ac\u201d update when you get a quote.",
   "home_depot": {
     "pt_lumber": {
-      "2x4x8":   { "price": 11.20, "unit": "each" },
-      "2x4x10":  { "price": 13.97, "unit": "each" },
-      "2x6x8":   { "price": 17.21, "unit": "each" },
-      "2x6x10":  { "price": 20.26, "unit": "each" },
-      "2x6x12":  { "price": 24.72, "unit": "each" },
-      "2x6x16":  { "price": 32.96, "unit": "each" },
-      "2x8x12":  { "price": 34.66, "unit": "each" },
-      "2x8x16":  { "price": 46.21, "unit": "each" },
-      "2x10x12": { "price": 43.47, "unit": "each", "note": "ESTIMATE" },
-      "2x10x16": { "price": 57.96, "unit": "each", "note": "ESTIMATE" },
-      "2x12x12": { "price": 54.97, "unit": "each", "note": "ESTIMATE" },
-      "4x4x8":   { "price": 9.20,  "unit": "each" },
-      "4x4x10":  { "price": 11.53, "unit": "each" },
-      "4x4x12":  { "price": 14.26, "unit": "each" },
-      "4x6x8":   { "price": 19.97, "unit": "each", "note": "ESTIMATE" },
-      "4x6x10":  { "price": 24.97, "unit": "each", "note": "ESTIMATE" },
-      "4x6x12":  { "price": 29.97, "unit": "each", "note": "ESTIMATE" },
-      "6x6x10":  { "price": 44.97, "unit": "each", "note": "ESTIMATE" }
+      "2x4x8": {
+        "price": 11.2,
+        "unit": "each"
+      },
+      "2x4x10": {
+        "price": 13.97,
+        "unit": "each"
+      },
+      "2x6x8": {
+        "price": 17.21,
+        "unit": "each"
+      },
+      "2x6x10": {
+        "price": 20.26,
+        "unit": "each"
+      },
+      "2x6x12": {
+        "price": 24.72,
+        "unit": "each"
+      },
+      "2x6x16": {
+        "price": 32.96,
+        "unit": "each"
+      },
+      "2x8x12": {
+        "price": 34.66,
+        "unit": "each"
+      },
+      "2x8x16": {
+        "price": 46.21,
+        "unit": "each"
+      },
+      "2x10x12": {
+        "price": 43.47,
+        "unit": "each",
+        "note": "ESTIMATE"
+      },
+      "2x10x16": {
+        "price": 57.96,
+        "unit": "each",
+        "note": "ESTIMATE"
+      },
+      "2x12x12": {
+        "price": 54.97,
+        "unit": "each",
+        "note": "ESTIMATE"
+      },
+      "4x4x8": {
+        "price": 9.2,
+        "unit": "each"
+      },
+      "4x4x10": {
+        "price": 11.53,
+        "unit": "each"
+      },
+      "4x4x12": {
+        "price": 14.26,
+        "unit": "each"
+      },
+      "4x6x8": {
+        "price": 19.97,
+        "unit": "each",
+        "note": "ESTIMATE"
+      },
+      "4x6x10": {
+        "price": 24.97,
+        "unit": "each",
+        "note": "ESTIMATE"
+      },
+      "4x6x12": {
+        "price": 29.97,
+        "unit": "each",
+        "note": "ESTIMATE"
+      },
+      "6x6x10": {
+        "price": 44.97,
+        "unit": "each",
+        "note": "ESTIMATE"
+      }
     },
     "pt_decking": {
-      "5/4x6x8":  { "price": 13.97, "unit": "each", "note": "ESTIMATE" },
-      "5/4x6x12": { "price": 19.97, "unit": "each", "note": "ESTIMATE — verify at store" },
-      "5/4x6x16": { "price": 25.97, "unit": "each", "note": "ESTIMATE — verify at store" }
+      "5/4x6x8": {
+        "price": 13.97,
+        "unit": "each",
+        "note": "ESTIMATE"
+      },
+      "5/4x6x12": {
+        "price": 19.97,
+        "unit": "each",
+        "note": "ESTIMATE \u00e2\u20ac\u201d verify at store"
+      },
+      "5/4x6x16": {
+        "price": 25.97,
+        "unit": "each",
+        "note": "ESTIMATE \u00e2\u20ac\u201d verify at store"
+      }
     },
     "trex_composite": {
-      "Trex Enhance Basics 1x6x12ft": { "price": 67.99,  "unit": "each", "note": "ESTIMATE — verify at store" },
-      "Trex Enhance Basics 1x6x16ft": { "price": 89.99,  "unit": "each", "note": "ESTIMATE — verify at store" },
-      "Trex Select 1x6x12ft":         { "price": 79.99,  "unit": "each", "note": "ESTIMATE — verify at store" },
-      "Trex Select 1x6x16ft":         { "price": 105.99, "unit": "each", "note": "ESTIMATE — verify at store" }
+      "Trex Enhance Basics 1x6x12ft": {
+        "price": 67.99,
+        "unit": "each",
+        "note": "ESTIMATE \u00e2\u20ac\u201d verify at store"
+      },
+      "Trex Enhance Basics 1x6x16ft": {
+        "price": 89.99,
+        "unit": "each",
+        "note": "ESTIMATE \u00e2\u20ac\u201d verify at store"
+      },
+      "Trex Select 1x6x12ft": {
+        "price": 79.99,
+        "unit": "each",
+        "note": "ESTIMATE \u00e2\u20ac\u201d verify at store"
+      },
+      "Trex Select 1x6x16ft": {
+        "price": 105.99,
+        "unit": "each",
+        "note": "ESTIMATE \u00e2\u20ac\u201d verify at store"
+      }
     },
     "fence_materials": {
-      "1x6x6 PT fence board":  { "price": 5.97,  "unit": "each", "note": "ESTIMATE" },
-      "2x4x8 PT rail":         { "price": 11.20, "unit": "each" },
-      "4x4x8 PT fence post":   { "price": 9.20,  "unit": "each" },
-      "4x6x8 PT fence post":   { "price": 18.97, "unit": "each", "note": "ESTIMATE" },
-      "chain link mesh (per LF 4ft high)": { "price": 6.97,  "unit": "LF",  "note": "ESTIMATE" },
-      "chain link mesh (per LF 6ft high)": { "price": 9.97,  "unit": "LF",  "note": "ESTIMATE" },
-      "vinyl fence panel 6ft x 8ft":       { "price": 89.99, "unit": "each", "note": "ESTIMATE" },
-      "vinyl fence post 5in x 8ft":        { "price": 34.99, "unit": "each", "note": "ESTIMATE" },
-      "gate hardware kit":                 { "price": 49.97, "unit": "each", "note": "ESTIMATE" }
+      "1x6x6 PT fence board": {
+        "price": 5.97,
+        "unit": "each",
+        "note": "ESTIMATE"
+      },
+      "2x4x8 PT rail": {
+        "price": 11.2,
+        "unit": "each"
+      },
+      "4x4x8 PT fence post": {
+        "price": 9.2,
+        "unit": "each"
+      },
+      "4x6x8 PT fence post": {
+        "price": 18.97,
+        "unit": "each",
+        "note": "ESTIMATE"
+      },
+      "chain link mesh (per LF 4ft high)": {
+        "price": 6.97,
+        "unit": "LF",
+        "note": "ESTIMATE"
+      },
+      "chain link mesh (per LF 6ft high)": {
+        "price": 9.97,
+        "unit": "LF",
+        "note": "ESTIMATE"
+      },
+      "vinyl fence panel 6ft x 8ft": {
+        "price": 89.99,
+        "unit": "each",
+        "note": "ESTIMATE"
+      },
+      "vinyl fence post 5in x 8ft": {
+        "price": 34.99,
+        "unit": "each",
+        "note": "ESTIMATE"
+      },
+      "gate hardware kit": {
+        "price": 49.97,
+        "unit": "each",
+        "note": "ESTIMATE"
+      }
     },
     "concrete": {
-      "Quikrete Fast-Setting Mix 30kg":    { "price": 14.48, "unit": "each" },
-      "Quikrete Regular Concrete Mix 30kg":{ "price": 9.93,  "unit": "each" },
-      "Quikrete Fence-n-Post 30kg":        { "price": 14.48, "unit": "each" }
+      "Quikrete Fast-Setting Mix 30kg": {
+        "price": 14.48,
+        "unit": "each"
+      },
+      "Quikrete Regular Concrete Mix 30kg": {
+        "price": 9.93,
+        "unit": "each"
+      },
+      "Quikrete Fence-n-Post 30kg": {
+        "price": 14.48,
+        "unit": "each"
+      }
     },
     "tube_forms": {
-      "Sonotube 8in x 4ft":  { "price": 12.99, "unit": "each", "note": "ESTIMATE" },
-      "Sonotube 10in x 4ft": { "price": 17.99, "unit": "each", "note": "ESTIMATE" },
-      "Sonotube 12in x 4ft": { "price": 22.99, "unit": "each", "note": "ESTIMATE" }
+      "Sonotube 8in x 4ft": {
+        "price": 12.99,
+        "unit": "each",
+        "note": "ESTIMATE"
+      },
+      "Sonotube 10in x 4ft": {
+        "price": 17.99,
+        "unit": "each",
+        "note": "ESTIMATE"
+      },
+      "Sonotube 12in x 4ft": {
+        "price": 22.99,
+        "unit": "each",
+        "note": "ESTIMATE"
+      }
+    },
+    "retaining_wall": {
+      "Standard concrete block 8x8x16": {
+        "price": 3.97,
+        "unit": "each",
+        "note": "ESTIMATE"
+      },
+      "Allan Block standard 6x8x12": {
+        "price": 4.97,
+        "unit": "each",
+        "note": "ESTIMATE"
+      },
+      "Retaining wall cap block": {
+        "price": 2.97,
+        "unit": "each",
+        "note": "ESTIMATE"
+      },
+      "Landscape fabric 3ft wide (per LF)": {
+        "price": 0.67,
+        "unit": "LF",
+        "note": "ESTIMATE"
+      }
     },
     "hardware": {
-      "Simpson LUS26 joist hanger 2x6":   { "price": 1.92,  "unit": "each" },
-      "Simpson LUS28 joist hanger 2x8":   { "price": 2.38,  "unit": "each" },
-      "Simpson LUS210 joist hanger 2x10": { "price": 2.97,  "unit": "each" },
-      "Simpson ABA44 ZMAX post base 4x4": { "price": 14.97, "unit": "each" },
-      "Simpson ABA66 ZMAX post base 6x6": { "price": 22.97, "unit": "each", "note": "ESTIMATE" },
-      "Simpson AC post cap 4x":           { "price": 9.97,  "unit": "each", "note": "ESTIMATE" },
-      "Ledger lag screws 1/2in (per 10)": { "price": 12.97, "unit": "per 10", "note": "ESTIMATE" },
-      "GRK structural screws 3in (100ct)":{ "price": 24.97, "unit": "box",    "note": "ESTIMATE" },
-      "Carriage bolts 1/2x6 (per 10)":   { "price": 8.97,  "unit": "per 10", "note": "ESTIMATE" },
-      "Stair stringer hardware kit":      { "price": 34.97, "unit": "each",   "note": "ESTIMATE" }
+      "Simpson LUS26 joist hanger 2x6": {
+        "price": 1.92,
+        "unit": "each"
+      },
+      "Simpson LUS28 joist hanger 2x8": {
+        "price": 2.38,
+        "unit": "each"
+      },
+      "Simpson LUS210 joist hanger 2x10": {
+        "price": 2.97,
+        "unit": "each"
+      },
+      "Simpson ABA44 ZMAX post base 4x4": {
+        "price": 14.97,
+        "unit": "each"
+      },
+      "Simpson ABA66 ZMAX post base 6x6": {
+        "price": 22.97,
+        "unit": "each",
+        "note": "ESTIMATE"
+      },
+      "Simpson AC post cap 4x": {
+        "price": 9.97,
+        "unit": "each",
+        "note": "ESTIMATE"
+      },
+      "Ledger lag screws 1/2in (per 10)": {
+        "price": 12.97,
+        "unit": "per 10",
+        "note": "ESTIMATE"
+      },
+      "GRK structural screws 3in (100ct)": {
+        "price": 24.97,
+        "unit": "box",
+        "note": "ESTIMATE"
+      },
+      "Carriage bolts 1/2x6 (per 10)": {
+        "price": 8.97,
+        "unit": "per 10",
+        "note": "ESTIMATE"
+      },
+      "Stair stringer hardware kit": {
+        "price": 34.97,
+        "unit": "each",
+        "note": "ESTIMATE"
+      }
     }
   },
   "bluegrass": {
-    "Sod - Premium Kentucky Bluegrass": { "price": 0.55,  "unit": "sqft" },
-    "Screened Loam (Topsoil)":          { "price": 29.99, "unit": "cubic yard" },
-    "Cedar Shredded Mulch":             { "price": 59.99, "unit": "cubic yard" },
-    "Pine Mulch":                       { "price": 52.99, "unit": "cubic yard" },
-    "Garden Mix Soil":                  { "price": 73.99, "unit": "cubic yard" }
+    "Crushed gravel 3/4in (base)": {
+      "price": 28.99,
+      "unit": "cubic yard",
+      "note": "ESTIMATE"
+    },
+    "Sod - Premium Kentucky Bluegrass": {
+      "price": 0.55,
+      "unit": "sqft"
+    },
+    "Screened Loam (Topsoil)": {
+      "price": 29.99,
+      "unit": "cubic yard"
+    },
+    "Cedar Shredded Mulch": {
+      "price": 59.99,
+      "unit": "cubic yard"
+    },
+    "Pine Mulch": {
+      "price": 52.99,
+      "unit": "cubic yard"
+    },
+    "Garden Mix Soil": {
+      "price": 73.99,
+      "unit": "cubic yard"
+    }
   },
   "home_rail": {
-    "_note": "No online pricing — update manually after quoting with Home Rail Calgary",
-    "Black aluminum railing per LF": { "price": null, "unit": "LF",   "note": "MANUAL — call Home Rail" },
-    "Glass panel infill per panel":  { "price": null, "unit": "each", "note": "MANUAL — call Home Rail" },
-    "Railing gate":                  { "price": null, "unit": "each", "note": "MANUAL — call Home Rail" }
+    "_note": "No online pricing \u00e2\u20ac\u201d update manually after quoting with Home Rail Calgary",
+    "Black aluminum railing per LF": {
+      "price": null,
+      "unit": "LF",
+      "note": "MANUAL \u00e2\u20ac\u201d call Home Rail"
+    },
+    "Glass panel infill per panel": {
+      "price": null,
+      "unit": "each",
+      "note": "MANUAL \u00e2\u20ac\u201d call Home Rail"
+    },
+    "Railing gate": {
+      "price": null,
+      "unit": "each",
+      "note": "MANUAL \u00e2\u20ac\u201d call Home Rail"
+    }
   }
 }
