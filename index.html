@@ -1191,10 +1191,7 @@ function renderRaw(text) {
 
 function showThinking() {
   const scroll = document.getElementById('estimateScroll');
-  const msg = conversationMessages.length === 0
-    ? 'Fetching live prices & calculating…'
-    : 'Recalculating…';
-  scroll.innerHTML = `<div class="thinking">${msg}</div>`;
+  scroll.innerHTML = '<div class="thinking">Calculating…</div>';
 }
 
 function escHtml(s) {
