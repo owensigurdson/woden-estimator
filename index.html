@@ -1528,6 +1528,33 @@ function renderLabourResult(d) {
   wrap.appendChild(card);
   scroll.appendChild(wrap);
   scroll.scrollTop = 0;
+
+  // Build lastEstimate so saveAsPDF() works on the labour tab.
+  // Each task gets a proportional share of the fully-loaded subtotal.
+  const pdfSections = d.breakdown.map(item => ({
+    name: item.name,
+    total: Math.round((item.hours / d.totalHours) * d.subtotal),
+    tbd: false,
+  }));
+  // Fix rounding drift on last section
+  const sectionSum = pdfSections.reduce((a, s) => a + s.total, 0);
+  if (pdfSections.length > 0) pdfSections[pdfSections.length - 1].total += d.subtotal - sectionSum;
+
+  const pdfNotes = ['Labour only — materials excluded.',
+    `2-man crew @ ${fmt(d.crewRate)}/hr · ${d.totalHours.toFixed(1)} crew hours · ${d.difficulty} site.`];
+  if (d.notes) pdfNotes.push(d.notes);
+
+  lastEstimate = {
+    client:     d.label || '—',
+    date:       new Date().toLocaleDateString('en-CA', {year:'numeric', month:'long', day:'numeric'}),
+    summary:    `Labour-only estimate. 2-man crew at ${fmt(d.crewRate)}/hr for ${d.totalHours.toFixed(1)} crew hours (${d.difficulty.toLowerCase()} site). Materials are excluded.`,
+    sections:   pdfSections,
+    subtotal:   d.subtotal,
+    gst_amount: d.gstAmount,
+    gst_pct:    d.gst,
+    total:      d.total,
+    notes:      pdfNotes,
+  };
 }
 
 // ── Clear ──
