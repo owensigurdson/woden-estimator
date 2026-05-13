@@ -1,4 +1,3 @@
-import base64
 import json
 import os
 import re
@@ -14,7 +13,6 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel
-from starlette.middleware.base import BaseHTTPMiddleware
 
 load_dotenv()
 
@@ -26,25 +24,6 @@ if not api_key:
 
 client = anthropic.Anthropic(api_key=api_key)
 app = FastAPI()
-
-class BasicAuthMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        if request.url.path in ("/favicon.ico",):
-            return await call_next(request)
-        auth = request.headers.get("Authorization", "")
-        if auth.startswith("Basic "):
-            try:
-                creds = base64.b64decode(auth[6:]).decode("utf-8")
-                username, password = creds.split(":", 1)
-                expected = os.getenv("APP_PASSWORD", "")
-                if username == "woden" and password == expected and expected:
-                    return await call_next(request)
-            except Exception:
-                pass
-        return Response("Unauthorized", status_code=401,
-                        headers={"WWW-Authenticate": 'Basic realm="Woden Estimator"'})
-
-app.add_middleware(BasicAuthMiddleware)
 
 # Labour multipliers applied by Python — Claude never touches these.
 # Key = substring to match in section name (lowercase). First match wins.
