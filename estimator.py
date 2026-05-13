@@ -69,12 +69,20 @@ LABOUR_MULTIPLIERS = {
         "hardware":   0.3,
     },
     "landscape": {
-        "sod":       1.5,
-        "topsoil":   0.5,
-        "mulch":     0.5,
-        "delivery":  0.0,
-        "wall":      1.8,
-        "retaining": 1.8,
+        "sod":      1.5,
+        "topsoil":  0.5,
+        "mulch":    0.5,
+        "delivery": 0.0,
+    },
+    "retaining_wall": {
+        "block":    1.8,   # block laying is labour-intensive
+        "cap":      1.2,   # manual cap placement
+        "gravel":   0.3,   # compaction — mostly material cost
+        "base":     0.3,
+        "drainage": 0.3,
+        "fabric":   0.3,
+        "geogrid":  0.6,
+        "delivery": 0.0,
     },
 }
 DEFAULT_LABOUR = 0.8
@@ -288,15 +296,46 @@ LANDSCAPING — QUANTITIES:
 - Sod: sqft directly (include 5% waste)
 - Add delivery charge if applicable (ask client — Bluegrass charges separately)
 
-LANDSCAPING — BLOCK RETAINING WALL:
-- Wall face area (sq ft) = wall_lf × (wall_courses × 0.667)
-- Standard concrete block (8×8×16"): 1.18 blocks per sq face ft (5% waste included)
-- Allan Block standard (18×7.75×12" face): 1.08 blocks per sq face ft (5% waste included)
-- Gravel base: 0.025 cu yd per LF of wall (4" deep × 18" wide trench) — price from bluegrass
-- Cap blocks: ceil(wall_lf / 1.33) pieces
-- Landscape fabric: wall face area sq ft, priced as LF from prices (3ft-wide roll = 1 LF covers 3 sq ft)
-- Walls 4+ courses (≥2.7 ft): flag in notes that geogrid/deadman anchors are likely required — site assessment needed
-- Output as a separate "Retaining Wall" section
+━━━ RETAINING WALL (job_type = retaining_wall) ━━━
+
+DIMENSIONS:
+- Wall face area (sq ft) = wall_lf × (wall_courses × 0.667 ft per course)
+- First course is buried below grade — add 1 extra course to total block count (buried course not in face area but still needs blocks)
+- Total block courses = wall_courses + 1 (buried)
+
+BLOCKS:
+- Allan Block Classic (18×7.75″ face, 12″ deep): 1.08 blocks per sq face ft incl. 5% waste
+  Apply to total block courses (including buried): total_sqft = wall_lf × ((wall_courses + 1) × 0.667)
+- Standard concrete block (8×8×16″ face): 1.18 blocks per sq face ft incl. 5% waste
+  Same buried-course rule applies
+
+CAP BLOCKS (if include_cap):
+- Allan Block cap: 1 cap per 1.5 LF of wall = ceil(wall_lf / 1.5)
+- Standard cap block: 1 cap per LF = ceil(wall_lf)
+
+BASE GRAVEL (always include):
+- Excavate and compact 3/4″ crushed gravel under first course and 12″ behind it
+- Volume = wall_lf × 2.0 ft wide × 0.5 ft deep ÷ 27 = (wall_lf × 0.037) cu yd — price from bluegrass
+
+DRAINAGE GRAVEL (if include_drainage):
+- 3/4″ crushed gravel column behind wall, full height
+- Volume = wall_lf × 1.0 ft wide × (wall_courses × 0.667 ft) ÷ 27 cu yd — price from bluegrass
+
+LANDSCAPE FABRIC (if include_fabric):
+- Cover gravel backfill area: wall_lf LF of 3ft-wide fabric roll — price as LF from prices
+
+GEOGRID / DEADMAN:
+- Required when wall_courses ≥ 4 (wall ≥ 2.7 ft above grade)
+- Flag as TBD in notes — geogrid extends 4–6 ft back, quantity depends on site and soil
+- Do NOT guess geogrid cost; note it as "Geogrid/deadman anchors required — quote separately"
+
+SECTIONS TO OUTPUT:
+- "Blocks" — full block count including buried course
+- "Cap Blocks" — if include_cap
+- "Base Gravel" — always
+- "Drainage Gravel" — if include_drainage
+- "Landscape Fabric" — if include_fabric
+- "Delivery" — if delivery requested (flag TBD — Bluegrass quotes separately)
 
 ━━━ HOW TO ESTIMATE ━━━
 1. Do the full material takeoff — count quantities, price each item from the supplier prices above.

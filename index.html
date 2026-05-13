@@ -422,6 +422,7 @@ header {
       <div class="job-tab active" onclick="switchJob('deck')">Deck</div>
       <div class="job-tab" onclick="switchJob('fence')">Fence</div>
       <div class="job-tab" onclick="switchJob('landscape')">Landscape</div>
+      <div class="job-tab" onclick="switchJob('wall')">Retaining Wall</div>
       <div class="job-tab" onclick="switchJob('labour')">Labour</div>
     </div>
 
@@ -578,26 +579,6 @@ header {
         <label class="check-item"><input type="checkbox" id="l-sod"> Sod laying</label>
         <label class="check-item"><input type="checkbox" id="l-topsoil"> Topsoil spreading</label>
         <label class="check-item"><input type="checkbox" id="l-mulch"> Mulching</label>
-        <label class="check-item"><input type="checkbox" id="l-wall"> Block retaining wall</label>
-      </div>
-
-      <div id="l-wall-fields" style="display:none">
-        <div class="section-label">Retaining Wall</div>
-        <div class="field"><label>Wall length (LF)</label>
-          <input type="number" id="l-wall-lf" placeholder="20" min="1"></div>
-        <div class="field"><label>Wall height (courses, each ≈ 8″)</label>
-          <div class="toggle-group">
-            <div class="toggle" onclick="tog(this,'l-wh')">2</div>
-            <div class="toggle active" onclick="tog(this,'l-wh')">3</div>
-            <div class="toggle" onclick="tog(this,'l-wh')">4</div>
-            <div class="toggle" onclick="tog(this,'l-wh')">5</div>
-            <div class="toggle" onclick="tog(this,'l-wh')">6</div>
-          </div></div>
-        <div class="field"><label>Block type</label>
-          <div class="toggle-group">
-            <div class="toggle active" onclick="tog(this,'l-wbt')">Standard block</div>
-            <div class="toggle" onclick="tog(this,'l-wbt')">Allan Block</div>
-          </div></div>
       </div>
 
       <div class="section-label">Area &amp; Depth</div>
@@ -626,6 +607,55 @@ header {
         </div></div>
       <div class="field"><label>Notes</label>
         <textarea id="l-notes" placeholder="e.g. existing grass to remove, raised beds, grade change…"></textarea></div>
+    </div>
+
+    <!-- RETAINING WALL FORM -->
+    <div id="form-wall" class="form-scroll" style="display:none">
+      <div class="field"><label>Job / Client label (optional)</label>
+        <input type="text" id="w-label" placeholder="e.g. Smith – backyard wall"></div>
+
+      <div class="section-label">Wall Dimensions</div>
+      <div class="field"><label>Wall length (LF)</label>
+        <input type="number" id="w-lf" placeholder="40" min="1"></div>
+      <div class="field"><label>Wall height (courses, each ≈ 8″)</label>
+        <div class="toggle-group">
+          <div class="toggle" onclick="tog(this,'w-courses')">2</div>
+          <div class="toggle active" onclick="tog(this,'w-courses')">3</div>
+          <div class="toggle" onclick="tog(this,'w-courses')">4</div>
+          <div class="toggle" onclick="tog(this,'w-courses')">5</div>
+          <div class="toggle" onclick="tog(this,'w-courses')">6</div>
+          <div class="toggle" onclick="tog(this,'w-courses')">7</div>
+          <div class="toggle" onclick="tog(this,'w-courses')">8</div>
+        </div></div>
+
+      <div class="section-label">Block Type</div>
+      <div class="field">
+        <div class="toggle-group">
+          <div class="toggle active" onclick="tog(this,'w-block')">Allan Block</div>
+          <div class="toggle" onclick="tog(this,'w-block')">Standard block</div>
+        </div></div>
+
+      <div class="section-label">Scope Includes</div>
+      <div class="check-group">
+        <label class="check-item"><input type="checkbox" id="w-cap" checked> Cap blocks</label>
+        <label class="check-item"><input type="checkbox" id="w-drainage" checked> Drainage gravel behind wall</label>
+        <label class="check-item"><input type="checkbox" id="w-fabric" checked> Landscape fabric</label>
+      </div>
+
+      <div class="section-label">Site</div>
+      <div class="field"><label>Site difficulty</label>
+        <div class="toggle-group">
+          <div class="toggle" onclick="tog(this,'w-site')">Easy</div>
+          <div class="toggle active" onclick="tog(this,'w-site')">Normal</div>
+          <div class="toggle" onclick="tog(this,'w-site')">Difficult</div>
+        </div></div>
+      <div class="field"><label>Delivery (Bluegrass charges separately)</label>
+        <div class="toggle-group">
+          <div class="toggle active" onclick="tog(this,'w-delivery')">Include estimate</div>
+          <div class="toggle" onclick="tog(this,'w-delivery')">Self-haul</div>
+        </div></div>
+      <div class="field"><label>Notes</label>
+        <textarea id="w-notes" placeholder="e.g. tiered wall, sloped site, existing structure to remove…"></textarea></div>
     </div>
 
     <!-- LABOUR ONLY FORM -->
@@ -805,7 +835,7 @@ let lastEstimate = null;
 // ── Job tab switch ──
 function switchJob(type) {
   currentJob = type;
-  const jobTypes = ['deck','fence','landscape','labour'];
+  const jobTypes = ['deck','fence','landscape','wall','labour'];
   document.querySelectorAll('.job-tab').forEach((t, i) => {
     t.classList.toggle('active', jobTypes[i] === type);
   });
@@ -907,22 +937,35 @@ function collectLandscapeData() {
     sod: document.getElementById('l-sod').checked,
     topsoil: document.getElementById('l-topsoil').checked,
     mulch: document.getElementById('l-mulch').checked,
-    wall: document.getElementById('l-wall').checked,
     area_sqft: document.getElementById('l-area').value,
     topsoil_depth: getActive('[onclick*="l-td"]'),
     mulch_type: getActive('[onclick*="l-mt"]'),
     mulch_depth: getActive('[onclick*="l-md"]'),
     delivery: getActive('[onclick*="l-delivery"]'),
-    wall_lf: document.getElementById('l-wall-lf').value,
-    wall_courses: getActive('[onclick*="l-wh"]'),
-    wall_block_type: getActive('[onclick*="l-wbt"]'),
     notes: document.getElementById('l-notes').value,
+  };
+}
+
+function collectWallData() {
+  return {
+    job_type: 'retaining_wall',
+    label: document.getElementById('w-label').value,
+    wall_lf: document.getElementById('w-lf').value,
+    wall_courses: getActive('[onclick*="w-courses"]'),
+    block_type: getActive('[onclick*="w-block"]'),
+    include_cap: document.getElementById('w-cap').checked,
+    include_drainage: document.getElementById('w-drainage').checked,
+    include_fabric: document.getElementById('w-fabric').checked,
+    site_difficulty: getActive('[onclick*="w-site"]'),
+    delivery: getActive('[onclick*="w-delivery"]'),
+    notes: document.getElementById('w-notes').value,
   };
 }
 
 function collectJobData() {
   if (currentJob === 'deck') return collectDeckData();
   if (currentJob === 'fence') return collectFenceData();
+  if (currentJob === 'wall') return collectWallData();
   return collectLandscapeData();
 }
 
@@ -1363,9 +1406,6 @@ document.getElementById('lo-f-vgates').addEventListener('change', function() {
   el.style.display = this.checked ? 'flex' : 'none';
   if (this.checked) el.style.flexDirection = 'column';
 });
-document.getElementById('l-wall').addEventListener('change', function() {
-  document.getElementById('l-wall-fields').style.display = this.checked ? 'block' : 'none';
-});
 document.getElementById('lo-l-wall').addEventListener('change', function() {
   document.getElementById('lo-l-wall-fields').style.display = this.checked ? 'block' : 'none';
 });
@@ -1663,9 +1703,13 @@ function clearAll() {
   document.getElementById('l-sod').checked = false;
   document.getElementById('l-topsoil').checked = false;
   document.getElementById('l-mulch').checked = false;
-  document.getElementById('l-wall').checked = false;
-  document.getElementById('l-wall-fields').style.display = 'none';
-  document.getElementById('l-wall-lf').value = '';
+  // Retaining wall tab resets
+  document.getElementById('w-label').value = '';
+  document.getElementById('w-lf').value = '';
+  document.getElementById('w-notes').value = '';
+  document.getElementById('w-cap').checked = true;
+  document.getElementById('w-drainage').checked = true;
+  document.getElementById('w-fabric').checked = true;
   // Labour tab resets
   document.getElementById('lo-label').value = '';
   document.getElementById('lo-d-len').value = '';
