@@ -71,14 +71,25 @@ header {
 
 /* ── FORM PANEL ── */
 .form-panel {
-  width: 340px;
+  width: 300px;
+  min-width: 200px;
+  max-width: 640px;
   flex-shrink: 0;
   background: var(--panel);
-  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
+
+/* Drag-to-resize handle */
+.resize-handle {
+  width: 4px;
+  flex-shrink: 0;
+  background: var(--border);
+  cursor: col-resize;
+  transition: background 0.15s;
+}
+.resize-handle:hover, .resize-handle.dragging { background: var(--accent); }
 
 /* Job type tabs */
 .job-tabs {
@@ -308,7 +319,7 @@ header {
 /* Follow-up chat */
 .followup {
   border-top: 1px solid var(--border);
-  padding: 10px 16px;
+  padding: 7px 12px;
   display: none;
   gap: 8px;
   align-items: flex-end;
@@ -318,14 +329,14 @@ header {
 .followup.visible { display: flex; }
 .followup textarea {
   flex: 1; background: var(--card); border: 1px solid var(--border2);
-  border-radius: 6px; color: var(--text); padding: 8px 12px;
-  font-size: 13px; font-family: inherit; resize: none;
-  min-height: 38px; max-height: 100px; line-height: 1.4;
+  border-radius: 5px; color: var(--text); padding: 5px 10px;
+  font-size: 12px; font-family: inherit; resize: none;
+  min-height: 30px; max-height: 80px; line-height: 1.4;
 }
 .followup textarea:focus { outline: none; border-color: var(--accent); }
 .followup button {
   background: var(--card); border: 1px solid var(--border2);
-  border-radius: 6px; color: var(--label); padding: 8px 14px;
+  border-radius: 5px; color: var(--label); padding: 5px 12px;
   font-size: 12px; cursor: pointer; white-space: nowrap;
 }
 .followup button:hover { border-color: var(--accent); color: var(--text); }
@@ -807,6 +818,8 @@ header {
       <button class="generate-btn" id="genBtn" onclick="generate()">Generate Estimate</button>
     </div>
   </div>
+
+  <div class="resize-handle" id="resizeHandle"></div>
 
   <!-- ESTIMATE PANEL -->
   <div class="estimate-panel">
@@ -1744,6 +1757,37 @@ function clearAll() {
   document.getElementById('lo-f-gate-count').style.display = 'none';
   document.getElementById('lo-takeoff').checked = false;
 }
+
+// ── Resizable form panel ──
+(function() {
+  const handle   = document.getElementById('resizeHandle');
+  const panel    = document.querySelector('.form-panel');
+  const body     = document.querySelector('.body');
+  let dragging   = false;
+
+  handle.addEventListener('mousedown', e => {
+    dragging = true;
+    handle.classList.add('dragging');
+    document.body.style.cursor    = 'col-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const rect  = body.getBoundingClientRect();
+    const width = Math.max(200, Math.min(640, e.clientX - rect.left));
+    panel.style.width = width + 'px';
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove('dragging');
+    document.body.style.cursor     = '';
+    document.body.style.userSelect = '';
+  });
+})();
 </script>
 </body>
 </html>
