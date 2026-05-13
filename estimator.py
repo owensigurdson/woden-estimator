@@ -12,7 +12,7 @@ import anthropic
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Response
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -397,6 +397,10 @@ async def estimate(req: EstimateRequest):
     except Exception as e:
         return {"ok": False, "raw": f"Server error: {type(e).__name__}: {e}"}
 
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse(Path(__file__).parent / "woden.ico", media_type="image/x-icon")
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_ui():
