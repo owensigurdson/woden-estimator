@@ -172,20 +172,25 @@ Return ONLY a raw JSON object — no prose, no code fences:
     return None
 
 
-def apply_margins(data: dict, job_type: str, oh_pct: float, profit_pct: float, gst_pct: float) -> dict:
+def apply_margins(data: dict, job_type: str, oh_pct: float, profit_pct: float, gst_pct: float, crew_rate: float = 135.0) -> dict:
     subtotal = 0
     for section in data.get("sections", []):
         if section.get("tbd"):
             section["total"] = 0
             continue
         if "fixed_cost" in section:
-            # Fixed-price line items bypass all markup (forward-facing price, e.g. demo & disposal)
             section["total"] = int(section["fixed_cost"])
             subtotal += section["total"]
             continue
         mat = section.get("materials_cost", 0)
-        mult = get_labour_mult(job_type, section["name"])
-        base = mat * (1 + mult)
+        hours = section.get("labour_hours")
+        if hours is not None:
+            # Primary path: (materials + hours × crew_rate) × (1+OH%) × (1+profit%)
+            base = mat + float(hours) * crew_rate
+        else:
+            # Fallback for any section without labour_hours (legacy)
+            mult = get_labour_mult(job_type, section["name"])
+            base = mat * (1 + mult)
         total = round(base * (1 + oh_pct / 100) * (1 + profit_pct / 100))
         section["total"] = total
         subtotal += total
@@ -355,10 +360,37 @@ SECTIONS TO OUTPUT (in this order when applicable):
 - "Delivery" — if delivery requested (flag TBD — Bluegrass quotes separately)
 
 ━━━ HOW TO ESTIMATE ━━━
-1. Do the full material takeoff — count quantities, price each item from the supplier prices above.
-2. Sum the raw material costs for each section. Output that sum as materials_cost.
-3. DO NOT add labour, overhead, profit, or GST. The server calculates all of that automatically.
+1. Do the full material takeoff — count quantities, price each item from the supplier prices above. Output as materials_cost (raw supplier cost only — no markup).
+2. Estimate labour hours for each section using the production rates below. Output as labour_hours.
+3. DO NOT add overhead, profit, or GST — the server applies those automatically using: (materials + hours × crew_rate) × (1 + OH%) × (1 + profit%).
 4. Return ONLY a single valid JSON object. No prose, no markdown, no code fences — raw JSON only.
+
+━━━ LABOUR HOUR PRODUCTION RATES (man-hours, calibrated for Calgary 2025-2026) ━━━
+
+DECK:
+- Foundation footings: 1.5 hrs each (drill, sonotube, pour, post base)
+- Framing (beams, joists, ledger, joist hangers): 0.10 hrs per sqft of deck area
+- Decking boards (PT or composite, spacing + screwing): 0.05 hrs per sqft
+- Railings (posts, top/bottom rail, infill): 0.30 hrs per LF
+- Stairs: 1.2 hrs per riser
+
+FENCE:
+- Post setting (drill, tamp, concrete): 1.0 hr per post
+- Fence boards/cladding (cut, nail, level): 0.8 hrs per 8-ft bay
+- Gate (hang, hardware, plumb, latch): 2.5 hrs each
+
+LANDSCAPE:
+- Topsoil (spread, rake, grade): 0.30 hrs per cu yd
+- Sod (lay, butt, edge, roll): 0.08 hrs per sqft
+- Mulch (spread, edge): 0.20 hrs per cu yd
+
+RETAINING WALL:
+- Base excavation + compaction: 0.28 hrs per LF of wall
+- Allan Block installation (set level, backfill, compact per course): 0.11 hrs per block
+- Standard concrete block: 0.10 hrs per block
+- Cap blocks: 0.05 hrs per cap
+- Drainage gravel (install in lifts, tamp): 0.90 hrs per cu yd
+- Landscape fabric (cut, pin, overlap): 0.03 hrs per LF
 
 ━━━ OUTPUT (raw JSON, no other text) ━━━
 
@@ -367,7 +399,7 @@ SECTIONS TO OUTPUT (in this order when applicable):
   "date": "<today as Month D, YYYY>",
   "summary": "<2-3 plain English sentences describing the job — no dollar figures>",
   "sections": [
-    {{"name": "<Foundation|Framing|Decking|Railings|Stairs|Fence Boards|Gates & Hardware|Sod|Topsoil|Mulch|etc>", "materials_cost": <integer dollars>, "tbd": false}},
+    {{"name": "<Foundation|Framing|Decking|Railings|Stairs|Fence Boards|Gates & Hardware|Sod|Topsoil|Mulch|etc>", "materials_cost": <integer dollars>, "labour_hours": <decimal hours>, "tbd": false}},
     {{"name": "Demolition & Disposal", "materials_cost": 0, "fixed_cost": 1300, "tbd": false}},
     ...
   ],
@@ -377,16 +409,16 @@ SECTIONS TO OUTPUT (in this order when applicable):
     "Pricing subject to site assessment."
   ],
   "internal": [
-    "<one short line per section: key quantities and unit prices only — e.g. '22 posts × $11.53, 22 sonotubes × $12.99, 44 bags × $14.48 = $1,176'>"
+    "<one short line per section: quantities × unit prices = materials subtotal, then hours — e.g. '22 posts × $11.53 = $254, 19.8 hrs'>"
   ]
 }}
 
 Rules:
-- If a Home Rail price is null, set "tbd": true on that section and set materials_cost to 0
-- Round all dollar values to nearest integer
-- sections array: only include sections with actual scope (omit zero-cost ones)
+- Every non-TBD, non-fixed section MUST have both materials_cost and labour_hours
+- If a Home Rail price is null, set "tbd": true and materials_cost to 0; omit labour_hours
+- Round materials_cost to nearest integer; round labour_hours to one decimal place
+- sections array: only include sections with actual scope (omit zero-cost/zero-hour ones)
 - notes: keep each item to one short sentence
-- internal: quantities × unit prices = section materials total only — no labour, no margins
 - Do your math silently. Output ONLY the final JSON object — no prose before or after, no markdown fences"""
 
 
@@ -401,6 +433,7 @@ class EstimateRequest(BaseModel):
     overhead_pct: float = 15.0
     profit_pct: float = 20.0
     gst_pct: float = 5.0
+    crew_rate: float = 135.0
 
 
 @app.post("/estimate")
@@ -440,7 +473,7 @@ async def estimate(req: EstimateRequest):
             clean = m.group(0)
         try:
             data = json.loads(clean)
-            data = apply_margins(data, job_type, req.overhead_pct, req.profit_pct, req.gst_pct)
+            data = apply_margins(data, job_type, req.overhead_pct, req.profit_pct, req.gst_pct, req.crew_rate)
             mc = run_market_check(req.job_data, data)
             if mc:
                 data["market_check"] = mc

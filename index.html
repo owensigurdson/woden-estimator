@@ -417,6 +417,7 @@ header {
   <div class="logo">Woden <span>Estimator</span></div>
   <div class="hdivider"></div>
   <div class="margin-controls">
+    <div class="mf"><label>$/hr</label><input type="number" id="crew-rate" value="135" min="50" max="500" step="5"></div>
     <div class="mf"><label>OH</label><input type="number" id="oh" value="15" min="0" max="100">%</div>
     <div class="mf"><label>Profit</label><input type="number" id="profit" value="20" min="0" max="100">%</div>
     <div class="mf"><label>GST</label><input type="number" id="gst" value="5" min="0" max="20" step="0.5">%</div>
@@ -984,6 +985,7 @@ function collectJobData() {
 
 function getMargins() {
   return {
+    crew_rate:    parseFloat(document.getElementById('crew-rate').value) || 135,
     overhead_pct: parseFloat(document.getElementById('oh').value) || 0,
     profit_pct:   parseFloat(document.getElementById('profit').value) || 0,
     gst_pct:      parseFloat(document.getElementById('gst').value) || 0,
