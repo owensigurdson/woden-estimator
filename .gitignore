@@ -1,0 +1,6 @@
+.env
+__pycache__/
+*.pyc
+last_output.txt
+*.ico
+make_icon.py

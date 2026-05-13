@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Woden Estimator</title>
+<link rel="icon" type="image/x-icon" href="woden.ico">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #0d1017;
+  --panel:   #12151e;
+  --card:    #171b27;
+  --border:  #1e2336;
+  --border2: #262d45;
+  --text:    #d8dded;
+  --muted:   #5a6385;
+  --accent:  #3a50c8;
+  --accent2: #4a60d8;
+  --green:   #6dbf7a;
+  --amber:   #e0a44a;
+  --label:   #8898cc;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-size: 13px;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  height: 48px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.logo { font-size: 13px; font-weight: 700; letter-spacing: 0.1em; color: #fff; }
+.logo span { color: #5c7cfa; }
+.hdivider { width: 1px; height: 20px; background: var(--border2); }
+
+.margin-controls { display: flex; gap: 12px; align-items: center; margin-left: auto; }
+.mf { display: flex; align-items: center; gap: 5px; color: var(--muted); font-size: 12px; }
+.mf input {
+  width: 46px; background: var(--card); border: 1px solid var(--border2);
+  border-radius: 4px; color: var(--text); padding: 3px 6px;
+  font-size: 12px; text-align: center;
+}
+.mf input:focus { outline: none; border-color: var(--accent); }
+
+.clear-btn {
+  background: transparent; border: 1px solid var(--border2); border-radius: 4px;
+  color: var(--muted); font-size: 11px; padding: 4px 10px; cursor: pointer;
+  letter-spacing: 0.04em;
+}
+.clear-btn:hover { border-color: var(--accent); color: var(--label); }
+
+/* ── BODY ── */
+.body { flex: 1; display: flex; overflow: hidden; }
+
+/* ── FORM PANEL ── */
+.form-panel {
+  width: 340px;
+  flex-shrink: 0;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Job type tabs */
+.job-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.job-tab {
+  flex: 1; padding: 10px 0; text-align: center; font-size: 12px; font-weight: 600;
+  letter-spacing: 0.06em; color: var(--muted); cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  text-transform: uppercase;
+}
+.job-tab:hover { color: var(--label); }
+.job-tab.active { color: #fff; border-bottom-color: var(--accent2); }
+
+/* Form scroll area */
+.form-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.form-scroll::-webkit-scrollbar { width: 4px; }
+.form-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* Section */
+.section-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+  color: var(--muted); text-transform: uppercase;
+  padding-bottom: 6px; border-bottom: 1px solid var(--border);
+  margin-bottom: 2px;
+}
+
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-size: 11px; color: var(--label); }
+
+.field input[type="text"],
+.field input[type="number"],
+.field textarea,
+.field select {
+  background: var(--card); border: 1px solid var(--border2);
+  border-radius: 5px; color: var(--text); padding: 7px 9px;
+  font-size: 13px; font-family: inherit; width: 100%;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none; border-color: var(--accent);
+}
+.field textarea { resize: vertical; min-height: 60px; }
+
+/* Inline fields */
+.row { display: flex; gap: 8px; }
+.row .field { flex: 1; }
+
+/* Toggle buttons */
+.toggle-group { display: flex; gap: 5px; flex-wrap: wrap; }
+.toggle {
+  padding: 5px 11px; border: 1px solid var(--border2); border-radius: 4px;
+  color: var(--muted); cursor: pointer; font-size: 12px; background: var(--card);
+  transition: all 0.12s;
+}
+.toggle:hover { border-color: var(--accent); color: var(--label); }
+.toggle.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* Checkbox group */
+.check-group { display: flex; flex-direction: column; gap: 6px; }
+.check-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--label); cursor: pointer; }
+.check-item input[type="checkbox"] { accent-color: var(--accent); width: 14px; height: 14px; }
+
+/* Form footer */
+.form-footer {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.generate-btn {
+  width: 100%; background: var(--accent); color: #fff; border: none;
+  border-radius: 6px; padding: 11px; font-size: 13px; font-weight: 600;
+  cursor: pointer; letter-spacing: 0.04em; transition: background 0.15s;
+}
+.generate-btn:hover:not(:disabled) { background: var(--accent2); }
+.generate-btn:disabled { background: var(--border2); color: var(--muted); cursor: default; }
+
+/* ── ESTIMATE PANEL ── */
+.estimate-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.estimate-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+.estimate-scroll::-webkit-scrollbar { width: 5px; }
+.estimate-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+.empty-state {
+  height: 100%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  color: var(--border2); gap: 8px;
+}
+.empty-state h2 { font-size: 16px; color: #2a3050; }
+.empty-state p { font-size: 12px; color: #22283a; max-width: 280px; text-align: center; }
+
+/* ── Estimate output ── */
+.e-wrap { display: flex; flex-direction: column; gap: 12px; max-width: 640px; }
+
+.e-card {
+  background: #12151f;
+  border: 1px solid #1e2440;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.e-header {
+  background: #0f1220;
+  border-bottom: 1px solid #1a1e34;
+  padding: 16px 20px;
+}
+.e-co-name {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.2em;
+  text-transform: uppercase; color: #5c7cfa; margin-bottom: 10px;
+}
+.e-meta { display: flex; flex-direction: column; gap: 4px; }
+.e-meta-row { display: flex; gap: 10px; font-size: 13px; }
+.e-meta-row .lbl { color: #3a4868; width: 48px; flex-shrink: 0; }
+.e-meta-row .val { color: #8898c0; }
+
+.e-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+
+.e-summary { font-size: 14px; line-height: 1.7; color: #8898c0; }
+
+.e-section-title {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.16em;
+  text-transform: uppercase; color: #3a4868; margin-bottom: 8px;
+}
+
+.e-rows { display: flex; flex-direction: column; }
+.e-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 9px 0; border-bottom: 1px solid #161a2c; gap: 20px;
+}
+.e-row:first-child { border-top: 1px solid #161a2c; }
+.e-row-name  { color: #8898c0; font-size: 14px; }
+.e-row-amt   { color: #c8d8f8; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.e-row-tbd   { color: #445; font-size: 13px; font-style: italic; }
+
+.e-totals { display: flex; flex-direction: column; gap: 0; padding-top: 4px; }
+.e-tot-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 5px 0; gap: 20px;
+}
+.e-tot-lbl { color: #566080; font-size: 13px; }
+.e-tot-amt { color: #7888a8; font-size: 13px; font-variant-numeric: tabular-nums; }
+.e-tot-row.subtotal { border-top: 1px solid #1a1e30; padding-top: 10px; margin-top: 6px; }
+.e-tot-row.subtotal .e-tot-lbl { color: #7888a8; font-weight: 600; }
+.e-tot-row.subtotal .e-tot-amt { color: #9aaac8; font-weight: 600; }
+
+.e-total-box {
+  display: flex; justify-content: space-between; align-items: center;
+  background: #0b1910; border: 1px solid #1a3820; border-radius: 8px;
+  padding: 14px 18px; margin-top: 10px;
+}
+.e-total-box .lbl { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #4a9858; }
+.e-total-box .val { font-size: 24px; font-weight: 700; color: #6dbf7a; font-variant-numeric: tabular-nums; }
+
+.e-notes-list { display: flex; flex-direction: column; gap: 6px; }
+.e-note { font-size: 12.5px; color: #4a5878; line-height: 1.55; padding-left: 12px; text-indent: -12px; }
+
+.e-internal {
+  border: 1px solid #181c2c; border-radius: 8px;
+  padding: 12px 16px; display: flex; flex-direction: column; gap: 3px;
+}
+.e-int-title {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: #252d45; margin-bottom: 4px;
+}
+.e-int-item { font-size: 12px; color: #2e3650; line-height: 1.5; }
+
+.e-raw {
+  color: #6878a0; font-size: 13px; line-height: 1.65;
+  white-space: pre-wrap; padding: 20px;
+  border: 1px solid #1e2440; border-radius: 8px;
+}
+
+/* ── Market Check card ── */
+.mc-card {
+  background: #0d1118;
+  border: 1px solid #1e2440;
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.mc-title {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: #3a4868;
+}
+.mc-status-ok   { font-size: 13px; font-weight: 600; color: #6dbf7a; }
+.mc-status-high { font-size: 13px; font-weight: 600; color: #e07850; }
+.mc-status-low  { font-size: 13px; font-weight: 600; color: #e0c050; }
+.mc-range {
+  font-size: 12px; color: #3a4868; line-height: 1.6;
+}
+.mc-range span { color: #4a5878; }
+.mc-flags { display: flex; flex-direction: column; gap: 5px; }
+.mc-flag {
+  font-size: 12px; padding: 6px 10px;
+  border-radius: 5px; line-height: 1.5;
+}
+.mc-flag-high { background: #1a0e0a; border: 1px solid #3a1a10; color: #c06040; }
+.mc-flag-low  { background: #141008; border: 1px solid #3a2e10; color: #b09030; }
+.mc-summary { font-size: 11.5px; color: #2e3850; font-style: italic; }
+
+/* Follow-up chat */
+.followup {
+  border-top: 1px solid var(--border);
+  padding: 10px 16px;
+  display: none;
+  gap: 8px;
+  align-items: flex-end;
+  flex-shrink: 0;
+  background: var(--panel);
+}
+.followup.visible { display: flex; }
+.followup textarea {
+  flex: 1; background: var(--card); border: 1px solid var(--border2);
+  border-radius: 6px; color: var(--text); padding: 8px 12px;
+  font-size: 13px; font-family: inherit; resize: none;
+  min-height: 38px; max-height: 100px; line-height: 1.4;
+}
+.followup textarea:focus { outline: none; border-color: var(--accent); }
+.followup button {
+  background: var(--card); border: 1px solid var(--border2);
+  border-radius: 6px; color: var(--label); padding: 8px 14px;
+  font-size: 12px; cursor: pointer; white-space: nowrap;
+}
+.followup button:hover { border-color: var(--accent); color: var(--text); }
+.followup button:disabled { color: var(--border2); cursor: default; }
+
+.thinking {
+  font-style: italic; color: var(--muted); font-size: 12px;
+  padding: 16px 0;
+}
+
+/* ── Estimate toolbar ── */
+.estimate-toolbar {
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+}
+.print-btn {
+  background: transparent; border: 1px solid var(--border2);
+  border-radius: 5px; color: var(--label); font-size: 12px;
+  padding: 5px 14px; cursor: pointer; letter-spacing: 0.04em;
+}
+.print-btn:hover { border-color: var(--accent); color: var(--text); }
+
+/* ── Print styles ── */
+@media print {
+  @page { margin: 18mm 16mm; }
+
+  body { background: #fff !important; color: #111 !important; font-size: 12pt; }
+
+  header,
+  .form-panel,
+  .estimate-toolbar,
+  .followup,
+  .e-internal { display: none !important; }
+
+  .body { display: block !important; }
+  .estimate-panel { display: block !important; width: 100%; }
+  .estimate-scroll { overflow: visible !important; height: auto !important; padding: 0 !important; }
+
+  .e-wrap { max-width: 100%; gap: 16px; }
+
+  .e-card { background: #fff !important; border: 1px solid #ccc !important; border-radius: 6px !important; box-shadow: none !important; }
+  .e-header { background: #f4f6fb !important; border-bottom: 1px solid #ccc !important; padding: 14px 18px; }
+  .e-co-name { color: #1a3080 !important; font-size: 9pt; letter-spacing: 0.2em; }
+  .e-meta-row .lbl { color: #888 !important; }
+  .e-meta-row .val { color: #222 !important; }
+
+  .e-body { padding: 16px 18px !important; gap: 16px !important; }
+  .e-summary { color: #444 !important; font-size: 11pt; }
+  .e-section-title { color: #888 !important; }
+
+  .e-row { border-bottom: 1px solid #eee !important; }
+  .e-row:first-child { border-top: 1px solid #eee !important; }
+  .e-row-name { color: #333 !important; }
+  .e-row-amt { color: #111 !important; }
+  .e-row-tbd { color: #aaa !important; }
+
+  .e-tot-lbl { color: #666 !important; }
+  .e-tot-amt { color: #333 !important; }
+  .e-tot-row.subtotal .e-tot-lbl,
+  .e-tot-row.subtotal .e-tot-amt { color: #111 !important; }
+
+  .e-total-box { background: #f0f8f2 !important; border: 1px solid #aacfb0 !important; border-radius: 6px !important; }
+  .e-total-box .lbl { color: #1a6030 !important; }
+  .e-total-box .val { color: #1a6030 !important; }
+
+  .e-notes-list .e-note { color: #555 !important; }
+  .empty-state { display: none !important; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Woden <span>Estimator</span></div>
+  <div class="hdivider"></div>
+  <div class="margin-controls">
+    <div class="mf"><label>OH</label><input type="number" id="oh" value="15" min="0" max="100">%</div>
+    <div class="mf"><label>Profit</label><input type="number" id="profit" value="20" min="0" max="100">%</div>
+    <div class="mf"><label>GST</label><input type="number" id="gst" value="5" min="0" max="20" step="0.5">%</div>
+    <div class="hdivider"></div>
+    <button class="clear-btn" onclick="clearAll()">New Job</button>
+  </div>
+</header>
+
+<div class="body">
+
+  <!-- FORM PANEL -->
+  <div class="form-panel">
+    <div class="job-tabs">
+      <div class="job-tab active" onclick="switchJob('deck')">Deck</div>
+      <div class="job-tab" onclick="switchJob('fence')">Fence</div>
+      <div class="job-tab" onclick="switchJob('landscape')">Landscape</div>
+    </div>
+
+    <!-- DECK FORM -->
+    <div id="form-deck" class="form-scroll">
+      <div class="field"><label>Job / Client label (optional)</label>
+        <input type="text" id="d-label" placeholder="e.g. Smith – 123 Main St"></div>
+
+      <div class="section-label">Foundation</div>
+      <div class="field"><label>Mount type</label>
+        <div class="toggle-group">
+          <div class="toggle active" onclick="tog(this,'d-mount')">Ledger-mounted</div>
+          <div class="toggle" onclick="tog(this,'d-mount')">Free-standing</div>
+        </div></div>
+      <div class="row">
+        <div class="field"><label>Footings</label>
+          <input type="number" id="d-footings" placeholder="auto" min="1"></div>
+        <div class="field"><label>Footing size</label>
+          <div class="toggle-group">
+            <div class="toggle" onclick="tog(this,'d-fsize')">8″</div>
+            <div class="toggle active" onclick="tog(this,'d-fsize')">10″</div>
+            <div class="toggle" onclick="tog(this,'d-fsize')">12″</div>
+          </div></div>
+      </div>
+
+      <div class="section-label">Framing</div>
+      <div class="row">
+        <div class="field"><label>Length (ft)</label>
+          <input type="number" id="d-len" placeholder="20" min="1"></div>
+        <div class="field"><label>Width (ft)</label>
+          <input type="number" id="d-wid" placeholder="16" min="1"></div>
+      </div>
+      <div class="field"><label>Deck height above grade</label>
+        <div class="toggle-group">
+          <div class="toggle active" onclick="tog(this,'d-height')">Low (&lt;24″)</div>
+          <div class="toggle" onclick="tog(this,'d-height')">Mid (2–4ft)</div>
+          <div class="toggle" onclick="tog(this,'d-height')">High (&gt;4ft)</div>
+        </div></div>
+      <div class="field"><label>Joist size</label>
+        <div class="toggle-group">
+          <div class="toggle active" onclick="tog(this,'d-joist')">2×8</div>
+          <div class="toggle" onclick="tog(this,'d-joist')">2×10</div>
+        </div></div>
+
+      <div class="section-label">Decking</div>
+      <div class="field"><label>Decking material</label>
+        <div class="toggle-group">
+          <div class="toggle active" onclick="tog(this,'d-mat')">PT Wood</div>
+          <div class="toggle" onclick="tog(this,'d-mat')">Trex Enhance</div>
+          <div class="toggle" onclick="tog(this,'d-mat')">Trex Select</div>
+        </div></div>
+      <div class="field"><label>Fascia boards</label>
+        <div class="toggle-group">
+          <div class="toggle active" onclick="tog(this,'d-fascia')">Yes</div>
+          <div class="toggle" onclick="tog(this,'d-fascia')">No</div>
+        </div></div>
+
+      <div class="section-label">Add-ons</div>
+      <div class="field"><label>Railings</label>
+        <div class="toggle-group">
+          <div class="toggle" onclick="tog(this,'d-rail'); toggleShow('d-rail-lf', this)">Yes</div>
+          <div class="toggle active" onclick="tog(this,'d-rail'); toggleShow('d-rail-lf', this)">No</div>
+        </div></div>
+      <div class="field" id="d-rail-lf" style="display:none">
+        <label>Railing linear feet</label>
+        <input type="number" id="d-rlf" placeholder="40" min="0"></div>
+
+      <div class="field"><label>Stairs</label>
+        <div class="toggle-group">
+          <div class="toggle active" onclick="tog(this,'d-stairs'); toggleShow('d-stair-det', this)">None</div>
+          <div class="toggle" onclick="tog(this,'d-stairs'); toggleShow('d-stair-det', this)">1 set</div>
+          <div class="toggle" onclick="tog(this,'d-stairs'); toggleShow('d-stair-det', this)">2 sets</div>
+        </div></div>
+      <div id="d-stair-det" style="display:none">
+        <div class="field"><label>Steps per set</label>
+          <input type="number" id="d-steps" placeholder="7" min="1" max="20"></div>
+      </div>
+
+      <div class="field"><label>Site difficulty</label>
+        <div class="toggle-group">
+          <div class="toggle" onclick="tog(this,'d-site')">Easy</div>
+          <div class="toggle active" onclick="tog(this,'d-site')">Normal</div>
+          <div class="toggle" onclick="tog(this,'d-site')">Difficult</div>
+        </div></div>
+      <div class="field"><label>Notes</label>
+        <textarea id="d-notes" placeholder="e.g. ledger to brick, existing concrete to demo, two-storey…"></textarea></div>
+    </div>
+
+    <!-- FENCE FORM -->
+    <div id="form-fence" class="form-scroll" style="display:none">
+      <div class="field"><label>Job / Client label (optional)</label>
+        <input type="text" id="f-label" placeholder="e.g. Jones – backyard fence"></div>
+
+      <div class="section-label">Foundation</div>
+      <div class="row">
+        <div class="field"><label>Linear feet</label>
+          <input type="number" id="f-lf" placeholder="180" min="1"></div>
+        <div class="field"><label>Post spacing</label>
+          <div class="toggle-group">
+            <div class="toggle" onclick="tog(this,'f-spacing')">6 ft</div>
+            <div class="toggle active" onclick="tog(this,'f-spacing')">8 ft</div>
+          </div></div>
+      </div>
+      <div class="field"><label>Post size</label>
+        <div class="toggle-group">
+          <div class="toggle active" onclick="tog(this,'f-post')">4×4</div>
+          <div class="toggle" onclick="tog(this,'f-post')">4×6</div>
+        </div></div>
+
+      <div class="section-label">Framing &amp; Cladding</div>
+      <div class="field"><label>Fence type</label>
+        <div class="toggle-group">
+          <div class="toggle active" onclick="tog(this,'f-type')">Wood Privacy</div>
+          <div class="toggle" onclick="tog(this,'f-type')">Vinyl Privacy</div>
+          <div class="toggle" onclick="tog(this,'f-type')">Chain Link</div>
+        </div></div>
+      <div class="field"><label>Height</label>
+        <div class="toggle-group">
+          <div class="toggle" onclick="tog(this,'f-height')">4 ft</div>
+          <div class="toggle active" onclick="tog(this,'f-height')">6 ft</div>
+        </div></div>
+
+      <div class="section-label">Add-ons</div>
+      <div class="row">
+        <div class="field"><label>Gates (count)</label>
+          <input type="number" id="f-gates" value="0" min="0" max="10"></div>
+        <div class="field"><label>Gate width</label>
+          <div class="toggle-group">
+            <div class="toggle active" onclick="tog(this,'f-gw')">3 ft</div>
+            <div class="toggle" onclick="tog(this,'f-gw')">4 ft</div>
+            <div class="toggle" onclick="tog(this,'f-gw')">8 ft dbl</div>
+          </div></div>
+      </div>
+
+      <div class="field"><label>Site difficulty</label>
+        <div class="toggle-group">
+          <div class="toggle" onclick="tog(this,'f-site')">Easy</div>
+          <div class="toggle active" onclick="tog(this,'f-site')">Normal</div>
+          <div class="toggle" onclick="tog(this,'f-site')">Difficult</div>
+        </div></div>
+      <div class="field"><label>Notes</label>
+        <textarea id="f-notes" placeholder="e.g. 2ft grade change, rocky soil, remove old fence…"></textarea></div>
+    </div>
+
+    <!-- LANDSCAPE FORM -->
+    <div id="form-landscape" class="form-scroll" style="display:none">
+      <div class="field"><label>Job / Client label (optional)</label>
+        <input type="text" id="l-label" placeholder="e.g. Patel – front yard"></div>
+
+      <div class="section-label">Services</div>
+      <div class="check-group">
+        <label class="check-item"><input type="checkbox" id="l-sod"> Sod laying</label>
+        <label class="check-item"><input type="checkbox" id="l-topsoil"> Topsoil spreading</label>
+        <label class="check-item"><input type="checkbox" id="l-mulch"> Mulching</label>
+      </div>
+
+      <div class="section-label">Area &amp; Depth</div>
+      <div class="field"><label>Area (sq ft)</label>
+        <input type="number" id="l-area" placeholder="600" min="1"></div>
+      <div class="field"><label>Topsoil depth (if applicable)</label>
+        <div class="toggle-group">
+          <div class="toggle" onclick="tog(this,'l-td')">2″</div>
+          <div class="toggle active" onclick="tog(this,'l-td')">3″</div>
+          <div class="toggle" onclick="tog(this,'l-td')">4″</div>
+        </div></div>
+      <div class="field"><label>Mulch type (if applicable)</label>
+        <div class="toggle-group">
+          <div class="toggle active" onclick="tog(this,'l-mt')">Cedar</div>
+          <div class="toggle" onclick="tog(this,'l-mt')">Pine</div>
+        </div></div>
+      <div class="field"><label>Mulch depth (if applicable)</label>
+        <div class="toggle-group">
+          <div class="toggle" onclick="tog(this,'l-md')">2″</div>
+          <div class="toggle active" onclick="tog(this,'l-md')">3″</div>
+        </div></div>
+      <div class="field"><label>Delivery (Bluegrass charges separately)</label>
+        <div class="toggle-group">
+          <div class="toggle active" onclick="tog(this,'l-delivery')">Include estimate</div>
+          <div class="toggle" onclick="tog(this,'l-delivery')">Self-haul</div>
+        </div></div>
+      <div class="field"><label>Notes</label>
+        <textarea id="l-notes" placeholder="e.g. existing grass to remove, raised beds, grade change…"></textarea></div>
+    </div>
+
+    <div class="form-footer">
+      <button class="generate-btn" id="genBtn" onclick="generate()">Generate Estimate</button>
+    </div>
+  </div>
+
+  <!-- ESTIMATE PANEL -->
+  <div class="estimate-panel">
+    <div class="estimate-toolbar" id="estimateToolbar" style="display:none">
+      <button class="print-btn" onclick="saveAsPDF()">Save PDF</button>
+    </div>
+    <div class="estimate-scroll" id="estimateScroll">
+      <div class="empty-state" id="emptyState">
+        <h2>Fill in the form</h2>
+        <p>Complete the job details on the left and click Generate Estimate.</p>
+      </div>
+    </div>
+    <div class="followup" id="followup">
+      <textarea id="followupInput" placeholder="Refine the estimate… e.g. 'add a pergola', 'change to Trex Select', 'assume 10 footings'" rows="1"></textarea>
+      <button id="followupBtn" onclick="followUp()">Send</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let currentJob = 'deck';
+let conversationMessages = [];
+let lastEstimate = null;
+
+// ── Job tab switch ──
+function switchJob(type) {
+  currentJob = type;
+  document.querySelectorAll('.job-tab').forEach((t, i) => {
+    t.classList.toggle('active', ['deck','fence','landscape'][i] === type);
+  });
+  ['deck','fence','landscape'].forEach(j => {
+    document.getElementById('form-' + j).style.display = j === type ? 'flex' : 'none';
+    if (j === type) document.getElementById('form-' + j).style.flexDirection = 'column';
+  });
+}
+
+// ── Toggle buttons ──
+function tog(el, group) {
+  el.closest('.toggle-group').querySelectorAll('.toggle').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function toggleShow(id, el) {
+  const show = el.textContent.trim() !== 'None' && el.textContent.trim() !== 'No';
+  const target = document.getElementById(id);
+  if (target) target.style.display = show && el.classList.contains('active') ? 'flex' : 'none';
+  if (target) target.style.flexDirection = 'column';
+}
+
+// Railing toggle
+document.querySelectorAll('[onclick*="d-rail"]').forEach(el => {
+  el.addEventListener('click', () => {
+    setTimeout(() => {
+      const railActive = document.querySelector('.toggle.active[onclick*="d-rail"]');
+      const show = railActive && railActive.textContent.trim() === 'Yes';
+      document.getElementById('d-rail-lf').style.display = show ? 'flex' : 'none';
+      if (show) document.getElementById('d-rail-lf').style.flexDirection = 'column';
+    }, 10);
+  });
+});
+
+// Stairs toggle
+document.querySelectorAll('[onclick*="d-stairs"]').forEach(el => {
+  el.addEventListener('click', () => {
+    setTimeout(() => {
+      const active = document.querySelector('.toggle.active[onclick*="d-stairs"]');
+      const show = active && active.textContent.trim() !== 'None';
+      document.getElementById('d-stair-det').style.display = show ? 'block' : 'none';
+    }, 10);
+  });
+});
+
+// ── Collect form data ──
+function getActive(selector) {
+  const el = document.querySelector('.toggle.active' + selector);
+  return el ? el.textContent.trim() : null;
+}
+
+function collectDeckData() {
+  return {
+    job_type: 'deck',
+    label: document.getElementById('d-label').value,
+    mount_type: getActive('[onclick*="d-mount"]'),
+    footing_count: document.getElementById('d-footings').value || 'auto-calculate',
+    footing_size_inches: getActive('[onclick*="d-fsize"]'),
+    deck_length_ft: document.getElementById('d-len').value,
+    deck_width_ft: document.getElementById('d-wid').value,
+    deck_height: getActive('[onclick*="d-height"]'),
+    joist_size: getActive('[onclick*="d-joist"]'),
+    decking_material: getActive('[onclick*="d-mat"]'),
+    fascia: getActive('[onclick*="d-fascia"]'),
+    railings: getActive('[onclick*="d-rail"]'),
+    railing_lf: document.getElementById('d-rlf').value || null,
+    stairs: getActive('[onclick*="d-stairs"]'),
+    steps_per_set: document.getElementById('d-steps').value || null,
+    site_difficulty: getActive('[onclick*="d-site"]'),
+    notes: document.getElementById('d-notes').value,
+  };
+}
+
+function collectFenceData() {
+  return {
+    job_type: 'fence',
+    label: document.getElementById('f-label').value,
+    linear_feet: document.getElementById('f-lf').value,
+    post_spacing: getActive('[onclick*="f-spacing"]'),
+    post_size: getActive('[onclick*="f-post"]'),
+    fence_type: getActive('[onclick*="f-type"]'),
+    fence_height: getActive('[onclick*="f-height"]'),
+    gate_count: document.getElementById('f-gates').value,
+    gate_width: getActive('[onclick*="f-gw"]'),
+    site_difficulty: getActive('[onclick*="f-site"]'),
+    notes: document.getElementById('f-notes').value,
+  };
+}
+
+function collectLandscapeData() {
+  return {
+    job_type: 'landscape',
+    label: document.getElementById('l-label').value,
+    sod: document.getElementById('l-sod').checked,
+    topsoil: document.getElementById('l-topsoil').checked,
+    mulch: document.getElementById('l-mulch').checked,
+    area_sqft: document.getElementById('l-area').value,
+    topsoil_depth: getActive('[onclick*="l-td"]'),
+    mulch_type: getActive('[onclick*="l-mt"]'),
+    mulch_depth: getActive('[onclick*="l-md"]'),
+    delivery: getActive('[onclick*="l-delivery"]'),
+    notes: document.getElementById('l-notes').value,
+  };
+}
+
+function collectJobData() {
+  if (currentJob === 'deck') return collectDeckData();
+  if (currentJob === 'fence') return collectFenceData();
+  return collectLandscapeData();
+}
+
+function getMargins() {
+  return {
+    overhead_pct: parseFloat(document.getElementById('oh').value) || 0,
+    profit_pct:   parseFloat(document.getElementById('profit').value) || 0,
+    gst_pct:      parseFloat(document.getElementById('gst').value) || 0,
+  };
+}
+
+// ── Format currency ──
+function fmt(n) {
+  return '$' + Math.round(n).toLocaleString('en-CA');
+}
+
+// ── Save PDF ──
+function saveAsPDF() {
+  if (!lastEstimate) return;
+  const d = lastEstimate;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'letter' });
+
+  const W = 215.9;
+  const margin = 18;
+  const contentW = W - margin * 2;
+  let y = 0;
+
+  // Header band
+  doc.setFillColor(12, 18, 40);
+  doc.rect(0, 0, W, 36, 'F');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(92, 124, 250);
+  doc.text('WODEN CONTRACTING', margin, 13);
+
+  doc.setFontSize(17);
+  doc.setTextColor(255, 255, 255);
+  doc.text('Estimate', margin, 26);
+
+  const dateVal = d.date || new Date().toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(136, 152, 192);
+  doc.text(dateVal, W - margin, 13, { align: 'right' });
+
+  // Client row
+  y = 46;
+  const clientVal = d.client || '—';
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(90, 99, 133);
+  doc.text('CLIENT', margin, y);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.setTextColor(40, 50, 90);
+  doc.text(clientVal, margin + 20, y);
+  y += 10;
+
+  // Divider
+  doc.setDrawColor(200, 210, 230);
+  doc.setLineWidth(0.3);
+  doc.line(margin, y, W - margin, y);
+  y += 8;
+
+  // Summary
+  if (d.summary) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(80, 95, 130);
+    const lines = doc.splitTextToSize(d.summary, contentW);
+    doc.text(lines, margin, y);
+    y += lines.length * 5.5 + 8;
+  }
+
+  // Scope of Work
+  if (d.sections && d.sections.length) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(90, 99, 133);
+    doc.text('SCOPE OF WORK', margin, y);
+    y += 5;
+
+    d.sections.forEach((s, i) => {
+      if (i % 2 === 0) {
+        doc.setFillColor(245, 247, 253);
+        doc.rect(margin, y - 4.5, contentW, 8.5, 'F');
+      }
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(50, 65, 100);
+      doc.text(s.name, margin + 3, y);
+      const amtStr = s.tbd ? 'TBD' : fmt(s.total);
+      doc.setFont('helvetica', s.tbd ? 'italic' : 'normal');
+      doc.setTextColor(s.tbd ? 140 : 30, s.tbd ? 145 : 40, s.tbd ? 170 : 80);
+      doc.text(amtStr, W - margin - 3, y, { align: 'right' });
+      y += 9;
+    });
+
+    y += 3;
+    doc.setDrawColor(200, 210, 230);
+    doc.line(margin, y, W - margin, y);
+    y += 7;
+  }
+
+  // Totals
+  const totRow = (label, value, bold) => {
+    doc.setFont('helvetica', bold ? 'bold' : 'normal');
+    doc.setFontSize(bold ? 10.5 : 10);
+    doc.setTextColor(bold ? 30 : 80, bold ? 40 : 90, bold ? 70 : 120);
+    doc.text(label, margin + 3, y);
+    doc.text(value, W - margin - 3, y, { align: 'right' });
+    y += 7;
+  };
+
+  if (d.subtotal != null) totRow('Subtotal', fmt(d.subtotal), false);
+  if (d.gst_amount != null) totRow(`GST (${d.gst_pct || 5}%)`, fmt(d.gst_amount), false);
+
+  if (d.total != null) {
+    y += 2;
+    doc.setFillColor(240, 248, 242);
+    doc.setDrawColor(160, 200, 168);
+    doc.roundedRect(margin, y - 5, contentW, 13, 2, 2, 'FD');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(20, 100, 50);
+    doc.text('TOTAL', margin + 5, y + 3);
+    doc.setFontSize(14);
+    doc.text(fmt(d.total), W - margin - 5, y + 3, { align: 'right' });
+    y += 17;
+  }
+
+  // Notes
+  if (d.notes && d.notes.length) {
+    y += 4;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(90, 99, 133);
+    doc.text('NOTES', margin, y);
+    y += 5;
+
+    d.notes.forEach(n => {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(90, 100, 130);
+      const lines = doc.splitTextToSize('• ' + n, contentW - 4);
+      doc.text(lines, margin + 3, y);
+      y += lines.length * 5 + 3;
+    });
+  }
+
+
+  // Footer on every page
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    const pH = doc.internal.pageSize.getHeight();
+    doc.setFillColor(12, 18, 40);
+    doc.rect(0, pH - 14, W, 14, 'F');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(70, 85, 130);
+    doc.text('Woden Contracting — Calgary, AB — 403-493-6685 — wodencontracting.com', margin, pH - 4.5);
+    doc.setTextColor(55, 65, 110);
+    doc.text(`Page ${i} of ${pageCount}`, W - margin, pH - 4.5, { align: 'right' });
+  }
+
+  const clientSlug = (d.client || 'estimate').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const dateSlug = new Date().toISOString().slice(0, 10);
+  doc.save(`Woden-Estimate-${clientSlug}-${dateSlug}.pdf`);
+}
+
+// ── Render from JSON ──
+function renderFromJSON(d) {
+  lastEstimate = d;
+  document.getElementById('estimateToolbar').style.display = 'flex';
+  const scroll = document.getElementById('estimateScroll');
+  scroll.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'e-wrap';
+
+  // Card
+  const card = document.createElement('div');
+  card.className = 'e-card';
+
+  // Header
+  const clientVal = d.client || '—';
+  const dateVal   = d.date   || new Date().toLocaleDateString('en-CA', {year:'numeric',month:'long',day:'numeric'});
+  card.innerHTML = `
+    <div class="e-header">
+      <div class="e-co-name">Woden Contracting</div>
+      <div class="e-meta">
+        <div class="e-meta-row"><span class="lbl">Client</span><span class="val">${escHtml(clientVal)}</span></div>
+        <div class="e-meta-row"><span class="lbl">Date</span><span class="val">${escHtml(dateVal)}</span></div>
+      </div>
+    </div>`;
+
+  // Body
+  const body = document.createElement('div');
+  body.className = 'e-body';
+
+  // Summary
+  if (d.summary) {
+    body.innerHTML += `<div class="e-summary">${escHtml(d.summary)}</div>`;
+  }
+
+  // Scope rows
+  if (d.sections && d.sections.length) {
+    let rows = '<div class="e-section-title">Scope of Work</div><div class="e-rows">';
+    d.sections.forEach(s => {
+      if (s.tbd) {
+        rows += `<div class="e-row"><span class="e-row-name">${escHtml(s.name)}</span><span class="e-row-tbd">TBD — pending supplier quote</span></div>`;
+      } else {
+        rows += `<div class="e-row"><span class="e-row-name">${escHtml(s.name)}</span><span class="e-row-amt">${fmt(s.total)}</span></div>`;
+      }
+    });
+    rows += '</div>';
+    body.innerHTML += rows;
+  }
+
+  // Totals
+  let totals = '<div class="e-totals">';
+  if (d.subtotal != null) {
+    totals += `<div class="e-tot-row subtotal"><span class="e-tot-lbl">Subtotal</span><span class="e-tot-amt">${fmt(d.subtotal)}</span></div>`;
+  }
+  if (d.gst_amount != null) {
+    totals += `<div class="e-tot-row"><span class="e-tot-lbl">GST (${d.gst_pct || 5}%)</span><span class="e-tot-amt">${fmt(d.gst_amount)}</span></div>`;
+  }
+  totals += '</div>';
+  if (d.total != null) {
+    totals += `<div class="e-total-box"><span class="lbl">Total</span><span class="val">${fmt(d.total)}</span></div>`;
+  }
+  body.innerHTML += totals;
+
+  // Notes
+  if (d.notes && d.notes.length) {
+    let notes = '<div class="e-section-title" style="margin-top:16px">Notes</div><div class="e-notes-list">';
+    d.notes.forEach(n => { notes += `<div class="e-note">• ${escHtml(n)}</div>`; });
+    notes += '</div>';
+    body.innerHTML += notes;
+  }
+
+  card.appendChild(body);
+  wrap.appendChild(card);
+
+  // Internal ref
+  if (d.internal && d.internal.length) {
+    let intHtml = '<div class="e-internal"><div class="e-int-title">Internal Reference</div>';
+    d.internal.forEach(i => { intHtml += `<div class="e-int-item">• ${escHtml(i)}</div>`; });
+    intHtml += '</div>';
+    wrap.innerHTML += intHtml;
+  }
+
+  // Market check
+  if (d.market_check) {
+    const mc = d.market_check;
+    const anyFlagged = mc.overall_flagged || (mc.sections || []).some(s => s.flagged);
+    const dir = mc.overall_flag_direction;
+
+    let statusClass = 'mc-status-ok';
+    let statusText = 'Within market range';
+    if (mc.overall_flagged) {
+      statusClass = dir === 'high' ? 'mc-status-high' : 'mc-status-low';
+      const pct = Math.abs(mc.overall_deviation_pct || 0).toFixed(1);
+      statusText = dir === 'high' ? `↑ ${pct}% above market avg` : `↓ ${pct}% below market avg`;
+    }
+
+    const perUnit = mc.estimate_per_unit != null ? '$' + Number(mc.estimate_per_unit).toFixed(0) : '—';
+    const avgUnit = mc.market_avg_per_unit != null ? '$' + mc.market_avg_per_unit : '—';
+    const lowUnit = mc.market_low_per_unit != null ? '$' + mc.market_low_per_unit : '—';
+    const highUnit = mc.market_high_per_unit != null ? '$' + mc.market_high_per_unit : '—';
+    const unit = mc.unit || 'unit';
+
+    let mcHtml = `<div class="mc-card">
+      <div class="mc-header">
+        <span class="mc-title">Market Check — Calgary / AB</span>
+        <span class="${statusClass}">${statusText}</span>
+      </div>
+      <div class="mc-range">
+        <span>Market range:</span> ${lowUnit} – ${highUnit}/${unit} &nbsp;·&nbsp; <span>avg</span> ${avgUnit}/${unit} &nbsp;·&nbsp; <span>this estimate</span> ${perUnit}/${unit}
+      </div>`;
+
+    const flagged = (mc.sections || []).filter(s => s.flagged);
+    if (flagged.length) {
+      mcHtml += '<div class="mc-flags">';
+      flagged.forEach(s => {
+        const cls = s.flag_direction === 'high' ? 'mc-flag-high' : 'mc-flag-low';
+        const arrow = s.flag_direction === 'high' ? '↑' : '↓';
+        const pct = Math.abs(s.deviation_pct || 0).toFixed(1);
+        const avg = s.market_avg != null ? ' (market avg $' + s.market_avg.toLocaleString() + ')' : '';
+        mcHtml += `<div class="mc-flag ${cls}">${arrow} <strong>${escHtml(s.name)}</strong>: $${(s.estimate_total||0).toLocaleString()} is ${pct}% ${s.flag_direction} market avg${avg}</div>`;
+      });
+      mcHtml += '</div>';
+    }
+
+    if (mc.summary) {
+      mcHtml += `<div class="mc-summary">${escHtml(mc.summary)}</div>`;
+    }
+
+    mcHtml += '</div>';
+    wrap.innerHTML += mcHtml;
+  }
+
+  scroll.appendChild(wrap);
+  scroll.scrollTop = 0;
+}
+
+// ── Fallback: render raw text if JSON failed ──
+function renderRaw(text) {
+  const scroll = document.getElementById('estimateScroll');
+  scroll.innerHTML = `<pre class="e-raw">${escHtml(text)}</pre>`;
+  scroll.scrollTop = 0;
+}
+
+function showThinking() {
+  const scroll = document.getElementById('estimateScroll');
+  scroll.innerHTML = '<div class="thinking">Calculating…</div>';
+}
+
+function escHtml(s) {
+  if (typeof s !== 'string') s = String(s);
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Generate ──
+async function generate() {
+  const btn = document.getElementById('genBtn');
+  const jobData = collectJobData();
+  const margins = getMargins();
+
+  conversationMessages = [];
+  btn.disabled = true;
+  showThinking();
+
+  try {
+    const res = await fetch('/estimate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ job_data: jobData, messages: [], ...margins })
+    });
+    const resp = await res.json();
+
+    if (resp.ok && resp.data) {
+      renderFromJSON(resp.data);
+      const rawJson = JSON.stringify(resp.data);
+      conversationMessages = [
+        { role: 'user',      content: `Job data: ${JSON.stringify(jobData)}\nMargins: OH ${margins.overhead_pct}%, Profit ${margins.profit_pct}%, GST ${margins.gst_pct}%` },
+        { role: 'assistant', content: rawJson }
+      ];
+    } else {
+      renderRaw(resp.raw || 'No output returned.');
+      conversationMessages = [
+        { role: 'user',      content: `Job data: ${JSON.stringify(jobData)}` },
+        { role: 'assistant', content: resp.raw || '' }
+      ];
+    }
+    document.getElementById('followup').classList.add('visible');
+  } catch (e) {
+    renderRaw('Connection error: ' + e.message + '\n\nMake sure estimator.py is running.');
+  }
+
+  btn.disabled = false;
+}
+
+// ── Follow-up ──
+const fuInput = document.getElementById('followupInput');
+fuInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); followUp(); }
+});
+fuInput.addEventListener('input', () => {
+  fuInput.style.height = 'auto';
+  fuInput.style.height = Math.min(fuInput.scrollHeight, 100) + 'px';
+});
+
+async function followUp() {
+  const text = fuInput.value.trim();
+  if (!text) return;
+
+  const btn = document.getElementById('followupBtn');
+  const margins = getMargins();
+  btn.disabled = true;
+  fuInput.value = '';
+  fuInput.style.height = 'auto';
+
+  conversationMessages.push({ role: 'user', content: text });
+  showThinking();
+
+  try {
+    const res = await fetch('/estimate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ job_data: collectJobData(), messages: conversationMessages, ...margins })
+    });
+    const resp = await res.json();
+    if (resp.ok && resp.data) {
+      renderFromJSON(resp.data);
+      conversationMessages.push({ role: 'assistant', content: JSON.stringify(resp.data) });
+    } else {
+      renderRaw(resp.raw || 'No output.');
+      conversationMessages.push({ role: 'assistant', content: resp.raw || '' });
+    }
+  } catch (e) {
+    renderRaw('Error: ' + e.message);
+  }
+
+  btn.disabled = false;
+  fuInput.focus();
+}
+
+// ── Clear ──
+function clearAll() {
+  conversationMessages = [];
+  document.getElementById('estimateScroll').innerHTML =
+    '<div class="empty-state"><h2>Fill in the form</h2><p>Complete the job details on the left and click Generate Estimate.</p></div>';
+  document.getElementById('followup').classList.remove('visible');
+  document.getElementById('d-label').value = '';
+  document.getElementById('d-len').value = '';
+  document.getElementById('d-wid').value = '';
+  document.getElementById('d-notes').value = '';
+  document.getElementById('d-footings').value = '';
+  document.getElementById('d-rlf').value = '';
+  document.getElementById('d-steps').value = '';
+  document.getElementById('f-label').value = '';
+  document.getElementById('f-lf').value = '';
+  document.getElementById('f-gates').value = '0';
+  document.getElementById('f-notes').value = '';
+  document.getElementById('l-label').value = '';
+  document.getElementById('l-area').value = '';
+  document.getElementById('l-notes').value = '';
+  document.getElementById('l-sod').checked = false;
+  document.getElementById('l-topsoil').checked = false;
+  document.getElementById('l-mulch').checked = false;
+}
+</script>
+</body>
+</html>
