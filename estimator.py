@@ -291,7 +291,7 @@ LANDSCAPING — QUANTITIES:
 LANDSCAPING — BLOCK RETAINING WALL:
 - Wall face area (sq ft) = wall_lf × (wall_courses × 0.667)
 - Standard concrete block (8×8×16"): 1.18 blocks per sq face ft (5% waste included)
-- Allan Block standard (6×8×12"): 2.1 blocks per sq face ft (5% waste included)
+- Allan Block standard (18×7.75×12" face): 1.08 blocks per sq face ft (5% waste included)
 - Gravel base: 0.025 cu yd per LF of wall (4" deep × 18" wide trench) — price from bluegrass
 - Cap blocks: ceil(wall_lf / 1.33) pieces
 - Landscape fabric: wall face area sq ft, priced as LF from prices (3ft-wide roll = 1 LF covers 3 sq ft)
