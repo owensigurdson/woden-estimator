@@ -172,6 +172,11 @@ def apply_margins(data: dict, job_type: str, oh_pct: float, profit_pct: float, g
         if section.get("tbd"):
             section["total"] = 0
             continue
+        if "fixed_cost" in section:
+            # Fixed-price line items bypass all markup (forward-facing price, e.g. demo & disposal)
+            section["total"] = int(section["fixed_cost"])
+            subtotal += section["total"]
+            continue
         mat = section.get("materials_cost", 0)
         mult = get_labour_mult(job_type, section["name"])
         base = mat * (1 + mult)
@@ -329,7 +334,13 @@ GEOGRID / DEADMAN:
 - Flag as TBD in notes — geogrid extends 4–6 ft back, quantity depends on site and soil
 - Do NOT guess geogrid cost; note it as "Geogrid/deadman anchors required — quote separately"
 
-SECTIONS TO OUTPUT:
+DEMOLITION & DISPOSAL (if notes mention removal, demolition, tear-out, or disposal):
+- Fixed flat rate: $1,300 — DO NOT calculate, do NOT vary by size or scope
+- Output as: {{"name": "Demolition & Disposal", "materials_cost": 0, "fixed_cost": 1300, "tbd": false}}
+- This price is always $1,300 regardless of wall size
+
+SECTIONS TO OUTPUT (in this order when applicable):
+- "Demolition & Disposal" — if notes mention removal/demo (fixed_cost: 1300)
 - "Blocks" — full block count including buried course
 - "Cap Blocks" — if include_cap
 - "Base Gravel" — always
@@ -351,6 +362,7 @@ SECTIONS TO OUTPUT:
   "summary": "<2-3 plain English sentences describing the job — no dollar figures>",
   "sections": [
     {{"name": "<Foundation|Framing|Decking|Railings|Stairs|Fence Boards|Gates & Hardware|Sod|Topsoil|Mulch|etc>", "materials_cost": <integer dollars>, "tbd": false}},
+    {{"name": "Demolition & Disposal", "materials_cost": 0, "fixed_cost": 1300, "tbd": false}},
     ...
   ],
   "notes": [
