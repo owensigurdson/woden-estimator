@@ -422,6 +422,7 @@ header {
       <div class="job-tab active" onclick="switchJob('deck')">Deck</div>
       <div class="job-tab" onclick="switchJob('fence')">Fence</div>
       <div class="job-tab" onclick="switchJob('landscape')">Landscape</div>
+      <div class="job-tab" onclick="switchJob('labour')">Labour</div>
     </div>
 
     <!-- DECK FORM -->
@@ -605,6 +606,129 @@ header {
         <textarea id="l-notes" placeholder="e.g. existing grass to remove, raised beds, grade change…"></textarea></div>
     </div>
 
+    <!-- LABOUR ONLY FORM -->
+    <div id="form-labour" class="form-scroll" style="display:none">
+      <div class="field"><label>Job / Client label (optional)</label>
+        <input type="text" id="lo-label" placeholder="e.g. Taylor – labour only deck"></div>
+
+      <div class="section-label">Job Type</div>
+      <div class="field">
+        <div class="toggle-group">
+          <div class="toggle active" onclick="switchLabourType('deck'); tog(this,'lo-type')">Deck</div>
+          <div class="toggle" onclick="switchLabourType('fence'); tog(this,'lo-type')">Fence</div>
+          <div class="toggle" onclick="switchLabourType('landscape'); tog(this,'lo-type')">Landscape</div>
+        </div>
+      </div>
+
+      <!-- DECK scope -->
+      <div id="lo-deck">
+        <div class="section-label">Scope — check what work is included</div>
+        <div class="check-group">
+          <label class="check-item"><input type="checkbox" id="lo-d-found" checked> Foundation / Footings</label>
+          <label class="check-item"><input type="checkbox" id="lo-d-frame" checked> Framing</label>
+          <label class="check-item"><input type="checkbox" id="lo-d-deck" checked> Decking boards</label>
+          <label class="check-item"><input type="checkbox" id="lo-d-rail"> Railings</label>
+          <label class="check-item"><input type="checkbox" id="lo-d-stair"> Stairs</label>
+        </div>
+        <div class="field" id="lo-d-rail-lf" style="display:none">
+          <label>Railing linear feet</label>
+          <input type="number" id="lo-d-rlf" placeholder="40" min="0">
+        </div>
+        <div id="lo-d-stair-set" style="display:none">
+          <div class="field"><label>Sets of stairs</label>
+            <div class="toggle-group">
+              <div class="toggle active" onclick="tog(this,'lo-d-sets')">1 set</div>
+              <div class="toggle" onclick="tog(this,'lo-d-sets')">2 sets</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-label">Dimensions</div>
+        <div class="row">
+          <div class="field"><label>Length (ft)</label>
+            <input type="number" id="lo-d-len" placeholder="20" min="1"></div>
+          <div class="field"><label>Width (ft)</label>
+            <input type="number" id="lo-d-wid" placeholder="16" min="1"></div>
+        </div>
+        <div class="field"><label>Footings (blank = auto)</label>
+          <input type="number" id="lo-d-footings" placeholder="auto" min="1"></div>
+
+        <div class="field"><label>Height above grade</label>
+          <div class="toggle-group">
+            <div class="toggle active" onclick="tog(this,'lo-d-height')">Low (&lt;24″)</div>
+            <div class="toggle" onclick="tog(this,'lo-d-height')">Mid (2–4ft)</div>
+            <div class="toggle" onclick="tog(this,'lo-d-height')">High (&gt;4ft)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FENCE scope -->
+      <div id="lo-fence" style="display:none">
+        <div class="section-label">Scope — check what work is included</div>
+        <div class="check-group">
+          <label class="check-item"><input type="checkbox" id="lo-f-posts" checked> Posts (dig, set, concrete)</label>
+          <label class="check-item"><input type="checkbox" id="lo-f-rails" checked> Rails</label>
+          <label class="check-item"><input type="checkbox" id="lo-f-boards" checked> Boards / Panels</label>
+          <label class="check-item"><input type="checkbox" id="lo-f-gates"> Gates</label>
+        </div>
+        <div class="field" id="lo-f-gate-count" style="display:none">
+          <label>Number of gates</label>
+          <input type="number" id="lo-f-gc" value="1" min="1" max="10">
+        </div>
+
+        <div class="section-label">Dimensions</div>
+        <div class="field"><label>Linear feet</label>
+          <input type="number" id="lo-f-lf" placeholder="180" min="1"></div>
+        <div class="field"><label>Post spacing</label>
+          <div class="toggle-group">
+            <div class="toggle" onclick="tog(this,'lo-f-spacing')">6 ft</div>
+            <div class="toggle active" onclick="tog(this,'lo-f-spacing')">8 ft</div>
+          </div>
+        </div>
+        <div class="field"><label>Fence type</label>
+          <div class="toggle-group">
+            <div class="toggle active" onclick="tog(this,'lo-f-type')">Wood Privacy</div>
+            <div class="toggle" onclick="tog(this,'lo-f-type')">Vinyl Privacy</div>
+            <div class="toggle" onclick="tog(this,'lo-f-type')">Chain Link</div>
+          </div>
+        </div>
+        <div class="field"><label>Height</label>
+          <div class="toggle-group">
+            <div class="toggle" onclick="tog(this,'lo-f-height')">4 ft</div>
+            <div class="toggle active" onclick="tog(this,'lo-f-height')">6 ft</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LANDSCAPE scope -->
+      <div id="lo-land" style="display:none">
+        <div class="section-label">Services</div>
+        <div class="check-group">
+          <label class="check-item"><input type="checkbox" id="lo-l-sod"> Sod laying</label>
+          <label class="check-item"><input type="checkbox" id="lo-l-topsoil"> Topsoil spreading</label>
+          <label class="check-item"><input type="checkbox" id="lo-l-mulch"> Mulching</label>
+        </div>
+        <div class="section-label">Area</div>
+        <div class="field"><label>Area (sq ft)</label>
+          <input type="number" id="lo-l-area" placeholder="600" min="1"></div>
+      </div>
+
+      <!-- SHARED -->
+      <div class="section-label">Site &amp; Crew</div>
+      <div class="field"><label>Site difficulty</label>
+        <div class="toggle-group">
+          <div class="toggle" onclick="tog(this,'lo-site')">Easy</div>
+          <div class="toggle active" onclick="tog(this,'lo-site')">Normal</div>
+          <div class="toggle" onclick="tog(this,'lo-site')">Difficult</div>
+        </div>
+      </div>
+      <div class="field"><label>Crew rate ($/hr) — 2-man crew</label>
+        <input type="number" id="lo-rate" value="150" min="50" max="500"></div>
+      <div class="field"><label>Notes</label>
+        <textarea id="lo-notes" placeholder="e.g. tight access, second storey, existing structure…"></textarea>
+      </div>
+    </div>
+
     <div class="form-footer">
       <button class="generate-btn" id="genBtn" onclick="generate()">Generate Estimate</button>
     </div>
@@ -637,13 +761,18 @@ let lastEstimate = null;
 // ── Job tab switch ──
 function switchJob(type) {
   currentJob = type;
+  const jobTypes = ['deck','fence','landscape','labour'];
   document.querySelectorAll('.job-tab').forEach((t, i) => {
-    t.classList.toggle('active', ['deck','fence','landscape'][i] === type);
+    t.classList.toggle('active', jobTypes[i] === type);
   });
-  ['deck','fence','landscape'].forEach(j => {
-    document.getElementById('form-' + j).style.display = j === type ? 'flex' : 'none';
-    if (j === type) document.getElementById('form-' + j).style.flexDirection = 'column';
+  jobTypes.forEach(j => {
+    const el = document.getElementById('form-' + j);
+    if (el) {
+      el.style.display = j === type ? 'flex' : 'none';
+      if (j === type) el.style.flexDirection = 'column';
+    }
   });
+  document.getElementById('genBtn').textContent = type === 'labour' ? 'Calculate Labour' : 'Generate Estimate';
 }
 
 // ── Toggle buttons ──
@@ -1072,6 +1201,7 @@ function escHtml(s) {
 
 // ── Generate ──
 async function generate() {
+  if (currentJob === 'labour') { calculateLabour(); return; }
   const btn = document.getElementById('genBtn');
   const jobData = collectJobData();
   const margins = getMargins();
@@ -1155,6 +1285,251 @@ async function followUp() {
   fuInput.focus();
 }
 
+// ── Labour-Only tab ──
+let currentLabourType = 'deck';
+
+function switchLabourType(type) {
+  currentLabourType = type;
+  document.getElementById('lo-deck').style.display  = type === 'deck'      ? 'block' : 'none';
+  document.getElementById('lo-fence').style.display = type === 'fence'     ? 'block' : 'none';
+  document.getElementById('lo-land').style.display  = type === 'landscape' ? 'block' : 'none';
+}
+
+// Checkbox-driven show/hide for labour form
+document.getElementById('lo-d-rail').addEventListener('change', function() {
+  const el = document.getElementById('lo-d-rail-lf');
+  el.style.display = this.checked ? 'flex' : 'none';
+  if (this.checked) el.style.flexDirection = 'column';
+});
+document.getElementById('lo-d-stair').addEventListener('change', function() {
+  document.getElementById('lo-d-stair-set').style.display = this.checked ? 'block' : 'none';
+});
+document.getElementById('lo-f-gates').addEventListener('change', function() {
+  const el = document.getElementById('lo-f-gate-count');
+  el.style.display = this.checked ? 'flex' : 'none';
+  if (this.checked) el.style.flexDirection = 'column';
+});
+
+// Production rates — 2-man crew hours
+const LO_RATES = {
+  deck: {
+    foundation_per_footing: 1.75,
+    framing_per_sqft:       0.025,
+    decking_per_sqft:       0.015,
+    railing_per_lf:         0.10,
+    stairs_1set:            2.5,
+    stairs_2sets:           4.5,
+  },
+  fence: {
+    post_per_post:      0.50,
+    rail_per_lf:        0.03,
+    wood_board_per_lf:  0.04,
+    vinyl_panel_per_lf: 0.03,
+    chain_link_per_lf:  0.025,
+    gate_per_gate:      1.25,
+  },
+  landscape: {
+    sod_per_sqft:     0.002,
+    topsoil_per_sqft: 0.0017,
+    mulch_per_sqft:   0.001,
+  },
+};
+
+const LO_HEIGHT_MULT  = { 'Low (<24″)': 1.0, 'Mid (2–4ft)': 1.10, 'High (>4ft)': 1.25 };
+const LO_DIFF_MULT    = { Easy: 0.90, Normal: 1.0, Difficult: 1.20 };
+
+function loGetActive(selector) {
+  const el = document.querySelector('.toggle.active' + selector);
+  return el ? el.textContent.trim() : null;
+}
+
+function calculateLabour() {
+  const margins    = getMargins();
+  const crewRate   = parseFloat(document.getElementById('lo-rate').value) || 150;
+  const difficulty = loGetActive('[onclick*="lo-site"]') || 'Normal';
+  const diffMult   = LO_DIFF_MULT[difficulty] || 1.0;
+  const label      = document.getElementById('lo-label').value;
+  const notes      = document.getElementById('lo-notes').value.trim();
+
+  let breakdown  = [];
+  let totalHours = 0;
+
+  function addItem(name, hrs) {
+    if (hrs <= 0) return;
+    breakdown.push({ name, hours: hrs });
+    totalHours += hrs;
+  }
+
+  if (currentLabourType === 'deck') {
+    const len  = parseFloat(document.getElementById('lo-d-len').value) || 0;
+    const wid  = parseFloat(document.getElementById('lo-d-wid').value) || 0;
+    const sqft = len * wid;
+    const heightVal  = loGetActive('[onclick*="lo-d-height"]') || 'Low (<24″)';
+    const heightMult = LO_HEIGHT_MULT[heightVal] || 1.0;
+    const R = LO_RATES.deck;
+
+    if (document.getElementById('lo-d-found').checked) {
+      const manual = parseInt(document.getElementById('lo-d-footings').value);
+      const footings = manual > 0 ? manual : (len > 0 ? Math.ceil(len / 8) + 1 : 0);
+      addItem(`Foundation (${footings} footing${footings !== 1 ? 's' : ''})`,
+              footings * R.foundation_per_footing * diffMult);
+    }
+    if (document.getElementById('lo-d-frame').checked && sqft > 0)
+      addItem(`Framing (${sqft} sqft)`, sqft * R.framing_per_sqft * heightMult * diffMult);
+    if (document.getElementById('lo-d-deck').checked && sqft > 0)
+      addItem(`Decking boards (${sqft} sqft)`, sqft * R.decking_per_sqft * diffMult);
+    if (document.getElementById('lo-d-rail').checked) {
+      const rlf = parseFloat(document.getElementById('lo-d-rlf').value) || 0;
+      if (rlf > 0) addItem(`Railings (${rlf} LF)`, rlf * R.railing_per_lf * heightMult * diffMult);
+    }
+    if (document.getElementById('lo-d-stair').checked) {
+      const setsEl = document.querySelector('.toggle.active[onclick*="lo-d-sets"]');
+      const sets   = setsEl && setsEl.textContent.trim() === '2 sets' ? 2 : 1;
+      addItem(`Stairs (${sets} set${sets > 1 ? 's' : ''})`,
+              (sets === 1 ? R.stairs_1set : R.stairs_2sets) * diffMult);
+    }
+
+  } else if (currentLabourType === 'fence') {
+    const lf      = parseFloat(document.getElementById('lo-f-lf').value) || 0;
+    const spacingVal = loGetActive('[onclick*="lo-f-spacing"]') || '8 ft';
+    const spacing    = spacingVal === '6 ft' ? 6 : 8;
+    const ftype      = loGetActive('[onclick*="lo-f-type"]') || 'Wood Privacy';
+    const fheight    = loGetActive('[onclick*="lo-f-height"]') || '6 ft';
+    const postCount  = lf > 0 ? Math.ceil(lf / spacing) + 1 : 0;
+    const R = LO_RATES.fence;
+
+    if (document.getElementById('lo-f-posts').checked && postCount > 0)
+      addItem(`Posts (${postCount} posts @ ${spacing} ft spacing)`,
+              postCount * R.post_per_post * diffMult);
+    if (document.getElementById('lo-f-rails').checked && lf > 0) {
+      const railsPerBay = fheight === '4 ft' ? 2 : 3;
+      addItem(`Rails (${lf} LF, ${railsPerBay} rails/bay)`, lf * R.rail_per_lf * diffMult);
+    }
+    if (document.getElementById('lo-f-boards').checked && lf > 0) {
+      const rateMap = { 'Wood Privacy': R.wood_board_per_lf, 'Vinyl Privacy': R.vinyl_panel_per_lf, 'Chain Link': R.chain_link_per_lf };
+      addItem(`Boards / Panels (${lf} LF, ${ftype})`,
+              lf * (rateMap[ftype] || R.wood_board_per_lf) * diffMult);
+    }
+    if (document.getElementById('lo-f-gates').checked) {
+      const gc = parseInt(document.getElementById('lo-f-gc').value) || 1;
+      addItem(`Gates (${gc})`, gc * R.gate_per_gate * diffMult);
+    }
+
+  } else {
+    const area = parseFloat(document.getElementById('lo-l-area').value) || 0;
+    const R = LO_RATES.landscape;
+    if (document.getElementById('lo-l-sod').checked && area > 0)
+      addItem(`Sod laying (${area} sqft)`, area * R.sod_per_sqft * diffMult);
+    if (document.getElementById('lo-l-topsoil').checked && area > 0)
+      addItem(`Topsoil spreading (${area} sqft)`, area * R.topsoil_per_sqft * diffMult);
+    if (document.getElementById('lo-l-mulch').checked && area > 0)
+      addItem(`Mulching (${area} sqft)`, area * R.mulch_per_sqft * diffMult);
+  }
+
+  if (totalHours === 0) {
+    renderRaw('Enter job dimensions and select scope items to calculate labour.');
+    return;
+  }
+
+  const labourBase  = totalHours * crewRate;
+  const withOH      = labourBase * (1 + margins.overhead_pct / 100);
+  const withProfit  = withOH    * (1 + margins.profit_pct   / 100);
+  const subtotal    = Math.round(withProfit);
+  const gstAmount   = Math.round(subtotal * margins.gst_pct / 100);
+  const total       = subtotal + gstAmount;
+
+  renderLabourResult({ label, breakdown, totalHours, crewRate, labourBase, notes,
+    oh: margins.overhead_pct, profit: margins.profit_pct, gst: margins.gst_pct,
+    subtotal, gstAmount, total, difficulty });
+}
+
+function renderLabourResult(d) {
+  document.getElementById('estimateToolbar').style.display = 'flex';
+  const scroll = document.getElementById('estimateScroll');
+  scroll.innerHTML = '';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'e-wrap';
+
+  const card = document.createElement('div');
+  card.className = 'e-card';
+  const dateVal  = new Date().toLocaleDateString('en-CA', {year:'numeric',month:'long',day:'numeric'});
+  const clientVal = d.label || '—';
+
+  card.innerHTML = `
+    <div class="e-header">
+      <div class="e-co-name">Woden Contracting — Labour Only</div>
+      <div class="e-meta">
+        <div class="e-meta-row"><span class="lbl">Client</span><span class="val">${escHtml(clientVal)}</span></div>
+        <div class="e-meta-row"><span class="lbl">Date</span><span class="val">${escHtml(dateVal)}</span></div>
+        <div class="e-meta-row"><span class="lbl">Crew</span><span class="val">2-man @ ${fmt(d.crewRate)}/hr · ${d.difficulty}</span></div>
+      </div>
+    </div>`;
+
+  const body = document.createElement('div');
+  body.className = 'e-body';
+
+  let rows = '<div class="e-section-title">Hours Breakdown</div><div class="e-rows">';
+  d.breakdown.forEach(item => {
+    rows += `<div class="e-row">
+      <span class="e-row-name">${escHtml(item.name)}</span>
+      <span class="e-row-amt">${item.hours.toFixed(1)} hrs</span>
+    </div>`;
+  });
+  rows += '</div>';
+  body.innerHTML += rows;
+
+  const labourRounded = Math.round(d.labourBase);
+  const ohAmt     = Math.round(d.labourBase * d.oh / 100);
+  const profitAmt = Math.round(d.labourBase * (1 + d.oh / 100) * d.profit / 100);
+
+  body.innerHTML += `
+    <div class="e-totals">
+      <div class="e-tot-row subtotal">
+        <span class="e-tot-lbl">Total crew hours</span>
+        <span class="e-tot-amt">${d.totalHours.toFixed(1)} hrs</span>
+      </div>
+      <div class="e-tot-row">
+        <span class="e-tot-lbl">Labour (${d.totalHours.toFixed(1)} hrs × ${fmt(d.crewRate)}/hr)</span>
+        <span class="e-tot-amt">${fmt(labourRounded)}</span>
+      </div>
+    </div>
+    <div class="e-section-title" style="margin-top:4px">Pricing</div>
+    <div class="e-totals">
+      <div class="e-tot-row">
+        <span class="e-tot-lbl">Labour</span>
+        <span class="e-tot-amt">${fmt(labourRounded)}</span>
+      </div>
+      <div class="e-tot-row">
+        <span class="e-tot-lbl">Overhead (${d.oh}%)</span>
+        <span class="e-tot-amt">${fmt(ohAmt)}</span>
+      </div>
+      <div class="e-tot-row">
+        <span class="e-tot-lbl">Profit (${d.profit}%)</span>
+        <span class="e-tot-amt">${fmt(profitAmt)}</span>
+      </div>
+      <div class="e-tot-row subtotal">
+        <span class="e-tot-lbl">Subtotal</span>
+        <span class="e-tot-amt">${fmt(d.subtotal)}</span>
+      </div>
+      <div class="e-tot-row">
+        <span class="e-tot-lbl">GST (${d.gst}%)</span>
+        <span class="e-tot-amt">${fmt(d.gstAmount)}</span>
+      </div>
+    </div>
+    <div class="e-total-box"><span class="lbl">Total</span><span class="val">${fmt(d.total)}</span></div>`;
+
+  if (d.notes) {
+    body.innerHTML += `<div class="e-section-title" style="margin-top:16px">Notes</div>
+      <div class="e-notes-list"><div class="e-note">• ${escHtml(d.notes)}</div></div>`;
+  }
+
+  card.appendChild(body);
+  wrap.appendChild(card);
+  scroll.appendChild(wrap);
+  scroll.scrollTop = 0;
+}
+
 // ── Clear ──
 function clearAll() {
   conversationMessages = [];
@@ -1178,6 +1553,32 @@ function clearAll() {
   document.getElementById('l-sod').checked = false;
   document.getElementById('l-topsoil').checked = false;
   document.getElementById('l-mulch').checked = false;
+  // Labour tab resets
+  document.getElementById('lo-label').value = '';
+  document.getElementById('lo-d-len').value = '';
+  document.getElementById('lo-d-wid').value = '';
+  document.getElementById('lo-d-footings').value = '';
+  document.getElementById('lo-d-rlf').value = '';
+  document.getElementById('lo-f-lf').value = '';
+  document.getElementById('lo-f-gc').value = '1';
+  document.getElementById('lo-l-area').value = '';
+  document.getElementById('lo-rate').value = '150';
+  document.getElementById('lo-notes').value = '';
+  document.getElementById('lo-d-found').checked = true;
+  document.getElementById('lo-d-frame').checked = true;
+  document.getElementById('lo-d-deck').checked  = true;
+  document.getElementById('lo-d-rail').checked  = false;
+  document.getElementById('lo-d-stair').checked = false;
+  document.getElementById('lo-f-posts').checked  = true;
+  document.getElementById('lo-f-rails').checked  = true;
+  document.getElementById('lo-f-boards').checked = true;
+  document.getElementById('lo-f-gates').checked  = false;
+  document.getElementById('lo-l-sod').checked     = false;
+  document.getElementById('lo-l-topsoil').checked = false;
+  document.getElementById('lo-l-mulch').checked   = false;
+  document.getElementById('lo-d-rail-lf').style.display   = 'none';
+  document.getElementById('lo-d-stair-set').style.display = 'none';
+  document.getElementById('lo-f-gate-count').style.display = 'none';
 }
 </script>
 </body>
