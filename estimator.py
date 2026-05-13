@@ -69,10 +69,12 @@ LABOUR_MULTIPLIERS = {
         "hardware":   0.3,
     },
     "landscape": {
-        "sod":      1.5,
-        "topsoil":  0.5,
-        "mulch":    0.5,
-        "delivery": 0.0,
+        "sod":       1.5,
+        "topsoil":   0.5,
+        "mulch":     0.5,
+        "delivery":  0.0,
+        "wall":      1.8,
+        "retaining": 1.8,
     },
 }
 DEFAULT_LABOUR = 0.8
