@@ -75,14 +75,20 @@ LABOUR_MULTIPLIERS = {
         "delivery": 0.0,
     },
     "retaining_wall": {
-        "block":    1.8,   # block laying is labour-intensive
-        "cap":      1.2,   # manual cap placement
-        "gravel":   0.3,   # compaction — mostly material cost
-        "base":     0.3,
-        "drainage": 0.3,
-        "fabric":   0.3,
-        "geogrid":  0.6,
-        "delivery": 0.0,
+        # Block installation: set level per course, backfill, compact between courses — ~$15-20/block labour
+        "block":     4.5,
+        # Cap blocks: adhesive, alignment, final level check
+        "cap":       2.5,
+        # Base prep: excavate trench, haul spoil, compact gravel — expensive vs cheap material
+        "base":     15.0,
+        # Drainage backfill: gravel in lifts per course, tamped — significant hand work
+        "drainage":  6.0,
+        # Landscape fabric: cut, pin, overlap — mostly labour on cheap material
+        "fabric":    4.0,
+        # Geogrid/deadman anchoring (walls 4+ courses)
+        "geogrid":   2.0,
+        # Delivery pass-through
+        "delivery":  0.0,
     },
 }
 DEFAULT_LABOUR = 0.8
