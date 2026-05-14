@@ -1209,8 +1209,8 @@ function saveTakeoffPDF() {
   doc.text(`Client: ${clientVal}   Date: ${dateVal}`, W - margin, 18, { align: 'right' });
   y = 36;
 
-  // Column layout
-  const cols = { item: margin, qty: 105, unit: 125, uCost: 148, total: 170, supp: 185 };
+  // Column layout — no prices in PDF
+  const cols = { item: margin, qty: 130, unit: 152, supp: 172 };
 
   // Table header
   doc.setFillColor(20, 28, 48);
@@ -1219,8 +1219,6 @@ function saveTakeoffPDF() {
   doc.text('ITEM', cols.item, y);
   doc.text('QTY', cols.qty, y, {align:'right'});
   doc.text('UNIT', cols.unit, y);
-  doc.text('UNIT COST', cols.uCost, y, {align:'right'});
-  doc.text('TOTAL', cols.total, y, {align:'right'});
   doc.text('SUPPLIER', cols.supp, y);
   y += 6;
 
@@ -1233,7 +1231,6 @@ function saveTakeoffPDF() {
 
   sections.forEach(sec => {
     if (y > 245) { doc.addPage(); y = 20; }
-    // Section header
     doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(74, 111, 165);
     doc.text(sec.toUpperCase(), cols.item, y);
     doc.setDrawColor(30, 36, 64);
@@ -1243,13 +1240,11 @@ function saveTakeoffPDF() {
     seen[sec].forEach(it => {
       if (y > 248) { doc.addPage(); y = 20; }
       doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(50, 65, 100);
-      const itemTxt = doc.splitTextToSize(it.item, 55);
+      const itemTxt = doc.splitTextToSize(it.item, 100);
       doc.text(itemTxt, cols.item, y);
       doc.setTextColor(30, 40, 80);
       doc.text(String(Number(it.qty).toLocaleString('en-CA',{maximumFractionDigits:2})), cols.qty, y, {align:'right'});
       doc.text(it.unit||'', cols.unit, y);
-      doc.text('$'+Number(it.unit_cost).toFixed(2), cols.uCost, y, {align:'right'});
-      doc.text('$'+Math.round(it.total).toLocaleString('en-CA'), cols.total, y, {align:'right'});
       doc.setTextColor(104, 120, 160);
       doc.text(it.supplier||'', cols.supp, y);
       y += itemTxt.length > 1 ? 5 * itemTxt.length : 6;
@@ -1257,20 +1252,10 @@ function saveTakeoffPDF() {
     y += 2;
   });
 
-  // Total line
-  const matTotal = items.reduce((s,it) => s + (it.total||0), 0);
-  y += 4;
-  doc.setDrawColor(42, 53, 86); doc.setLineWidth(0.5);
-  doc.line(margin, y, W - margin, y);
-  y += 6;
-  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(93, 186, 126);
-  doc.text('Total Materials', cols.item, y);
-  doc.text('$'+matTotal.toLocaleString('en-CA'), W - margin, y, {align:'right'});
-  y += 8;
-
   // Footer note
+  y += 6;
   doc.setFont('helvetica','italic'); doc.setFontSize(7.5); doc.setTextColor(104, 120, 160);
-  doc.text('Prices from Home Depot / Bluegrass. Verify before ordering. Add 5–10% waste where applicable.', margin, y);
+  doc.text('Verify quantities before ordering. Add 5–10% waste where applicable.', margin, y);
 
   const fname = `Takeoff_${(clientVal).replace(/[^a-z0-9]/gi,'_')}_${dateVal.replace(/[^a-z0-9]/gi,'_')}.pdf`;
   doc.save(fname);
