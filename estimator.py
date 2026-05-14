@@ -408,15 +408,20 @@ RETAINING WALL:
     "Estimate valid for 30 days.",
     "Pricing subject to site assessment."
   ],
+  "takeoff": [
+    {{"section": "<matching section name>", "item": "<exact product name from price list>", "qty": <number>, "unit": "<each|LF|cu yd|sqft|bag|box>", "unit_cost": <price>, "total": <qty × unit_cost rounded to integer>, "supplier": "<Home Depot|Bluegrass|Home Rail>"}},
+    ...
+  ],
   "internal": [
-    "<one short line per section: quantities × unit prices = materials subtotal, then hours — e.g. '22 posts × $11.53 = $254, 19.8 hrs'>"
+    "<one short line per section: key quantities and labour hours — e.g. '22 posts × $11.53 = $254, 19.8 hrs'>"
   ]
 }}
 
 Rules:
 - Every non-TBD, non-fixed section MUST have both materials_cost and labour_hours
-- If a Home Rail price is null, set "tbd": true and materials_cost to 0; omit labour_hours
-- Round materials_cost to nearest integer; round labour_hours to one decimal place
+- takeoff: one entry per distinct product SKU — include every item needed for the job; qty × unit_cost must equal the section materials_cost
+- If a Home Rail price is null, set "tbd": true and materials_cost to 0; omit labour_hours and takeoff entries for that section
+- Round materials_cost to nearest integer; round labour_hours to one decimal; round takeoff totals to nearest integer
 - sections array: only include sections with actual scope (omit zero-cost/zero-hour ones)
 - notes: keep each item to one short sentence
 - Do your math silently. Output ONLY the final JSON object — no prose before or after, no markdown fences"""

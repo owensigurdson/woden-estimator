@@ -281,6 +281,29 @@ header {
   border: 1px solid #1e2440; border-radius: 8px;
 }
 
+/* ── Material Takeoff view ── */
+.takeoff-toggle-btn { background: #1a2340; }
+.takeoff-toggle-btn.active { background: #2563eb; color: #fff; }
+.to-wrap { padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
+.to-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.to-title { font-size: 17px; font-weight: 700; color: #e8eaf0; letter-spacing: 0.02em; }
+.to-meta { font-size: 12px; color: #6878a0; text-align: right; line-height: 1.6; }
+.to-section { font-size: 10px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase;
+  color: #4a6fa5; margin: 4px 0 2px; padding: 6px 0 4px; border-bottom: 1px solid #1e2440; }
+.to-table { width: 100%; border-collapse: collapse; }
+.to-table th {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: #6878a0; padding: 5px 8px; border-bottom: 1px solid #1e2440; text-align: left;
+}
+.to-table th.num, .to-table td.num { text-align: right; }
+.to-table td { font-size: 12.5px; color: #c8cedd; padding: 5px 8px; border-bottom: 1px solid #10162a; }
+.to-table tr:last-child td { border-bottom: none; }
+.to-total-row { display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 8px; border-top: 2px solid #2a3556; margin-top: 4px; }
+.to-total-lbl { font-size: 13px; font-weight: 700; color: #e8eaf0; }
+.to-total-amt { font-size: 15px; font-weight: 700; color: #5dba7e; }
+.to-note { font-size: 11.5px; color: #4a5878; padding: 10px 8px; border-top: 1px solid #1e2440; }
+
 /* ── Market Check card ── */
 .mc-card {
   background: #0d1118;
@@ -826,6 +849,8 @@ header {
   <div class="estimate-panel">
     <div class="estimate-toolbar" id="estimateToolbar" style="display:none">
       <button class="print-btn" onclick="saveAsPDF()">Save PDF</button>
+      <button class="print-btn takeoff-toggle-btn" id="takeoffToggleBtn" onclick="toggleTakeoffView()">Material Takeoff</button>
+      <button class="print-btn" id="takeoffPDFBtn" onclick="saveTakeoffPDF()" style="display:none">Takeoff PDF</button>
     </div>
     <div class="estimate-scroll" id="estimateScroll">
       <div class="empty-state" id="emptyState">
@@ -833,6 +858,7 @@ header {
         <p>Complete the job details on the left and click Generate Estimate.</p>
       </div>
     </div>
+    <div class="estimate-scroll" id="takeoffScroll" style="display:none"></div>
     <div class="followup" id="followup">
       <textarea id="followupInput" placeholder="Refine the estimate… e.g. 'add a pergola', 'change to Trex Select', 'assume 10 footings'" rows="1"></textarea>
       <button id="followupBtn" onclick="followUp()">Send</button>
@@ -997,6 +1023,175 @@ function fmt(n) {
   return '$' + Math.round(n).toLocaleString('en-CA');
 }
 
+// ── Material Takeoff view ──
+let takeoffVisible = false;
+
+function toggleTakeoffView() {
+  if (!lastEstimate) return;
+  takeoffVisible = !takeoffVisible;
+  document.getElementById('estimateScroll').style.display  = takeoffVisible ? 'none' : '';
+  document.getElementById('takeoffScroll').style.display   = takeoffVisible ? ''     : 'none';
+  document.getElementById('takeoffPDFBtn').style.display   = takeoffVisible ? ''     : 'none';
+  const btn = document.getElementById('takeoffToggleBtn');
+  btn.textContent = takeoffVisible ? 'Back to Estimate' : 'Material Takeoff';
+  btn.classList.toggle('active', takeoffVisible);
+  if (takeoffVisible) renderTakeoff(lastEstimate);
+}
+
+function renderTakeoff(d) {
+  const el = document.getElementById('takeoffScroll');
+  const items = (d.takeoff || []);
+  if (!items.length) {
+    el.innerHTML = '<div style="padding:40px;color:#6878a0;text-align:center">No material takeoff data in this estimate.<br>Re-generate the estimate to populate it.</div>';
+    return;
+  }
+
+  const clientVal = d.client || '—';
+  const dateVal   = d.date   || new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'});
+
+  // Group by section
+  const sections = [];
+  const seen = {};
+  items.forEach(it => {
+    if (!seen[it.section]) { seen[it.section] = []; sections.push(it.section); }
+    seen[it.section].push(it);
+  });
+
+  let rows = '';
+  sections.forEach(sec => {
+    rows += `<tr><td colspan="6" class="to-section">${escHtml(sec)}</td></tr>`;
+    seen[sec].forEach(it => {
+      rows += `<tr>
+        <td>${escHtml(it.item)}</td>
+        <td class="num">${Number(it.qty).toLocaleString('en-CA',{maximumFractionDigits:2})}</td>
+        <td>${escHtml(it.unit)}</td>
+        <td class="num">$${Number(it.unit_cost).toFixed(2)}</td>
+        <td class="num">${fmt(it.total)}</td>
+        <td style="color:#6878a0">${escHtml(it.supplier||'')}</td>
+      </tr>`;
+    });
+  });
+
+  const matTotal = items.reduce((s, it) => s + (it.total || 0), 0);
+
+  el.innerHTML = `
+    <div class="to-wrap">
+      <div class="to-header">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#4a6fa5;margin-bottom:4px">Woden Contracting</div>
+          <div class="to-title">Material Takeoff</div>
+        </div>
+        <div class="to-meta">
+          <div>Client: ${escHtml(clientVal)}</div>
+          <div>Date: ${escHtml(dateVal)}</div>
+        </div>
+      </div>
+      <table class="to-table">
+        <thead><tr>
+          <th>Item</th><th class="num">Qty</th><th>Unit</th>
+          <th class="num">Unit Cost</th><th class="num">Total</th><th>Supplier</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="to-total-row">
+        <span class="to-total-lbl">Total Materials</span>
+        <span class="to-total-amt">${fmt(matTotal)}</span>
+      </div>
+      <div class="to-note">Prices sourced from Home Depot / Bluegrass as of ${escHtml(dateVal)}. Verify pricing before ordering. Add 5–10% waste to quantities where applicable.</div>
+    </div>`;
+}
+
+function saveTakeoffPDF() {
+  if (!lastEstimate || !(lastEstimate.takeoff||[]).length) return;
+  const d = lastEstimate;
+  const items = d.takeoff;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'letter' });
+  const W = doc.internal.pageSize.getWidth();
+  const margin = 16;
+  let y = 20;
+
+  const clientVal = d.client || '—';
+  const dateVal   = d.date   || new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'});
+
+  // Header
+  doc.setFillColor(12, 18, 40);
+  doc.rect(0, 0, W, 28, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(74, 111, 165);
+  doc.text('WODEN CONTRACTING', margin, 10);
+  doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(232, 234, 240);
+  doc.text('Material Takeoff', margin, 18);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(104, 120, 160);
+  doc.text(`Client: ${clientVal}   Date: ${dateVal}`, W - margin, 18, { align: 'right' });
+  y = 36;
+
+  // Column layout
+  const cols = { item: margin, qty: 105, unit: 125, uCost: 148, total: 170, supp: 185 };
+
+  // Table header
+  doc.setFillColor(20, 28, 48);
+  doc.rect(margin - 2, y - 4, W - margin * 2 + 4, 8, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(104, 120, 160);
+  doc.text('ITEM', cols.item, y);
+  doc.text('QTY', cols.qty, y, {align:'right'});
+  doc.text('UNIT', cols.unit, y);
+  doc.text('UNIT COST', cols.uCost, y, {align:'right'});
+  doc.text('TOTAL', cols.total, y, {align:'right'});
+  doc.text('SUPPLIER', cols.supp, y);
+  y += 6;
+
+  // Group by section
+  const sections = []; const seen = {};
+  items.forEach(it => {
+    if (!seen[it.section]) { seen[it.section] = []; sections.push(it.section); }
+    seen[it.section].push(it);
+  });
+
+  sections.forEach(sec => {
+    if (y > 245) { doc.addPage(); y = 20; }
+    // Section header
+    doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(74, 111, 165);
+    doc.text(sec.toUpperCase(), cols.item, y);
+    doc.setDrawColor(30, 36, 64);
+    doc.line(margin, y + 1, W - margin, y + 1);
+    y += 6;
+
+    seen[sec].forEach(it => {
+      if (y > 248) { doc.addPage(); y = 20; }
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(50, 65, 100);
+      const itemTxt = doc.splitTextToSize(it.item, 55);
+      doc.text(itemTxt, cols.item, y);
+      doc.setTextColor(30, 40, 80);
+      doc.text(String(Number(it.qty).toLocaleString('en-CA',{maximumFractionDigits:2})), cols.qty, y, {align:'right'});
+      doc.text(it.unit||'', cols.unit, y);
+      doc.text('$'+Number(it.unit_cost).toFixed(2), cols.uCost, y, {align:'right'});
+      doc.text('$'+Math.round(it.total).toLocaleString('en-CA'), cols.total, y, {align:'right'});
+      doc.setTextColor(104, 120, 160);
+      doc.text(it.supplier||'', cols.supp, y);
+      y += itemTxt.length > 1 ? 5 * itemTxt.length : 6;
+    });
+    y += 2;
+  });
+
+  // Total line
+  const matTotal = items.reduce((s,it) => s + (it.total||0), 0);
+  y += 4;
+  doc.setDrawColor(42, 53, 86); doc.setLineWidth(0.5);
+  doc.line(margin, y, W - margin, y);
+  y += 6;
+  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(93, 186, 126);
+  doc.text('Total Materials', cols.item, y);
+  doc.text('$'+matTotal.toLocaleString('en-CA'), W - margin, y, {align:'right'});
+  y += 8;
+
+  // Footer note
+  doc.setFont('helvetica','italic'); doc.setFontSize(7.5); doc.setTextColor(104, 120, 160);
+  doc.text('Prices from Home Depot / Bluegrass. Verify before ordering. Add 5–10% waste where applicable.', margin, y);
+
+  const fname = `Takeoff_${(clientVal).replace(/[^a-z0-9]/gi,'_')}_${dateVal.replace(/[^a-z0-9]/gi,'_')}.pdf`;
+  doc.save(fname);
+}
+
 // ── Save PDF ──
 function saveAsPDF() {
   if (!lastEstimate) return;
@@ -1157,6 +1352,16 @@ function saveAsPDF() {
 // ── Render from JSON ──
 function renderFromJSON(d) {
   lastEstimate = d;
+  // Always return to estimate view on new generate
+  if (takeoffVisible) {
+    takeoffVisible = false;
+    document.getElementById('estimateScroll').style.display = '';
+    document.getElementById('takeoffScroll').style.display  = 'none';
+    document.getElementById('takeoffPDFBtn').style.display  = 'none';
+    const btn = document.getElementById('takeoffToggleBtn');
+    btn.textContent = 'Material Takeoff';
+    btn.classList.remove('active');
+  }
   document.getElementById('estimateToolbar').style.display = 'flex';
   const scroll = document.getElementById('estimateScroll');
   scroll.innerHTML = '';
