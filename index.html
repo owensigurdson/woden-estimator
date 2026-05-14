@@ -296,13 +296,48 @@ header {
   color: #6878a0; padding: 5px 8px; border-bottom: 1px solid #1e2440; text-align: left;
 }
 .to-table th.num, .to-table td.num { text-align: right; }
-.to-table td { font-size: 12.5px; color: #c8cedd; padding: 5px 8px; border-bottom: 1px solid #10162a; }
+.to-table td { font-size: 12.5px; color: #c8cedd; padding: 3px 6px; border-bottom: 1px solid #10162a; }
 .to-table tr:last-child td { border-bottom: none; }
+.to-row-total { color: #5dba7e; font-weight: 600; white-space: nowrap; }
 .to-total-row { display: flex; justify-content: space-between; align-items: center;
   padding: 10px 8px; border-top: 2px solid #2a3556; margin-top: 4px; }
 .to-total-lbl { font-size: 13px; font-weight: 700; color: #e8eaf0; }
 .to-total-amt { font-size: 15px; font-weight: 700; color: #5dba7e; }
-.to-note { font-size: 11.5px; color: #4a5878; padding: 10px 8px; border-top: 1px solid #1e2440; }
+.to-note { font-size: 11.5px; color: #4a5878; padding: 8px 8px 0; }
+
+.to-input {
+  background: transparent; border: none; border-bottom: 1px solid transparent;
+  color: #c8cedd; font-size: 12.5px; width: 100%; padding: 2px 3px;
+  outline: none; font-family: inherit;
+}
+.to-input:hover { border-bottom-color: #2a3556; }
+.to-input:focus { border-bottom-color: #2563eb; background: rgba(37,99,235,0.07); border-radius: 2px 2px 0 0; }
+.to-num-input { width: 70px; text-align: right; }
+.to-unit-input { width: 46px; }
+.to-supp-input { width: 80px; color: #6878a0; }
+.to-del-btn {
+  background: none; border: none; color: #2a3556; cursor: pointer;
+  font-size: 16px; line-height: 1; padding: 0 4px; transition: color 0.15s;
+}
+.to-del-btn:hover { color: #e05252; }
+
+.to-add-form {
+  display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+  padding: 10px 8px; border-top: 1px dashed #1e2440; margin-top: 6px;
+}
+.to-add-form input {
+  background: #0d1118; border: 1px solid #1e2440; border-radius: 4px;
+  color: #c8cedd; font-size: 12px; padding: 5px 7px; outline: none; font-family: inherit;
+}
+.to-add-form input:focus { border-color: #2563eb; }
+.to-add-form input.wide { flex: 1; min-width: 110px; }
+.to-add-form input.sm { width: 62px; }
+.to-add-form button {
+  background: #1a3a6e; border: 1px solid #2563eb; border-radius: 4px;
+  color: #90b8f8; font-size: 12px; font-weight: 600; padding: 5px 14px;
+  cursor: pointer; white-space: nowrap;
+}
+.to-add-form button:hover { background: #2563eb; color: #fff; }
 
 /* ── Market Check card ── */
 .mc-card {
@@ -1041,38 +1076,40 @@ function toggleTakeoffView() {
 function renderTakeoff(d) {
   const el = document.getElementById('takeoffScroll');
   const items = (d.takeoff || []);
-  if (!items.length) {
-    el.innerHTML = '<div style="padding:40px;color:#6878a0;text-align:center">No material takeoff data in this estimate.<br>Re-generate the estimate to populate it.</div>';
-    return;
-  }
 
   const clientVal = d.client || '—';
   const dateVal   = d.date   || new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'});
 
-  // Group by section
+  // Group by section, preserving flat index for editing
   const sections = [];
   const seen = {};
-  items.forEach(it => {
-    if (!seen[it.section]) { seen[it.section] = []; sections.push(it.section); }
-    seen[it.section].push(it);
+  items.forEach((it, idx) => {
+    const sec = it.section || 'Other';
+    if (!seen[sec]) { seen[sec] = []; sections.push(sec); }
+    seen[sec].push({ it, idx });
   });
 
   let rows = '';
   sections.forEach(sec => {
-    rows += `<tr><td colspan="6" class="to-section">${escHtml(sec)}</td></tr>`;
-    seen[sec].forEach(it => {
+    rows += `<tr><td colspan="7" class="to-section">${escHtml(sec)}</td></tr>`;
+    seen[sec].forEach(({ it, idx }) => {
+      const rowTotal = Math.round((it.qty || 0) * (it.unit_cost || 0));
       rows += `<tr>
-        <td>${escHtml(it.item)}</td>
-        <td class="num">${Number(it.qty).toLocaleString('en-CA',{maximumFractionDigits:2})}</td>
-        <td>${escHtml(it.unit)}</td>
-        <td class="num">$${Number(it.unit_cost).toFixed(2)}</td>
-        <td class="num">${fmt(it.total)}</td>
-        <td style="color:#6878a0">${escHtml(it.supplier||'')}</td>
+        <td><input class="to-input" value="${escHtml(it.item||'')}" onchange="toUpdate(${idx},'item',this.value)"></td>
+        <td><input class="to-input to-num-input" type="number" value="${it.qty}" step="0.1" min="0" oninput="toRecalc(${idx},this.value,'qty')"></td>
+        <td><input class="to-input to-unit-input" value="${escHtml(it.unit||'each')}" onchange="toUpdate(${idx},'unit',this.value)"></td>
+        <td><input class="to-input to-num-input" type="number" value="${Number(it.unit_cost).toFixed(2)}" step="0.01" min="0" oninput="toRecalc(${idx},this.value,'unit_cost')"></td>
+        <td class="num to-row-total" id="to-rt-${idx}">${fmt(rowTotal)}</td>
+        <td><input class="to-input to-supp-input" value="${escHtml(it.supplier||'')}" onchange="toUpdate(${idx},'supplier',this.value)"></td>
+        <td><button class="to-del-btn" onclick="toRemove(${idx})" title="Remove">×</button></td>
       </tr>`;
     });
   });
 
-  const matTotal = items.reduce((s, it) => s + (it.total || 0), 0);
+  const matTotal = items.reduce((s, it) => s + Math.round((it.qty||0)*(it.unit_cost||0)), 0);
+
+  // Build unique section list for the add-form datalist
+  const secOptions = sections.map(s => `<option value="${escHtml(s)}">`).join('');
 
   el.innerHTML = `
     <div class="to-wrap">
@@ -1086,19 +1123,66 @@ function renderTakeoff(d) {
           <div>Date: ${escHtml(dateVal)}</div>
         </div>
       </div>
+      ${items.length ? `
       <table class="to-table">
         <thead><tr>
           <th>Item</th><th class="num">Qty</th><th>Unit</th>
-          <th class="num">Unit Cost</th><th class="num">Total</th><th>Supplier</th>
+          <th class="num">Unit Cost</th><th class="num">Total</th><th>Supplier</th><th></th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
       <div class="to-total-row">
         <span class="to-total-lbl">Total Materials</span>
-        <span class="to-total-amt">${fmt(matTotal)}</span>
+        <span class="to-total-amt" id="to-grand-total">${fmt(matTotal)}</span>
+      </div>` : '<div style="padding:16px 8px;color:#6878a0">No items yet — add one below.</div>'}
+      <datalist id="to-sec-list">${secOptions}</datalist>
+      <div class="to-add-form">
+        <input class="wide" id="to-new-item" placeholder="Item name" list="to-item-list">
+        <input class="sm" id="to-new-qty" type="number" placeholder="Qty" min="0" step="0.1">
+        <input style="width:52px" id="to-new-unit" placeholder="each">
+        <input class="sm" id="to-new-cost" type="number" placeholder="Cost" min="0" step="0.01">
+        <input style="width:90px" id="to-new-section" placeholder="Section" list="to-sec-list">
+        <input style="width:90px" id="to-new-supplier" placeholder="Supplier">
+        <button onclick="toAdd()">+ Add</button>
       </div>
-      <div class="to-note">Prices sourced from Home Depot / Bluegrass as of ${escHtml(dateVal)}. Verify pricing before ordering. Add 5–10% waste to quantities where applicable.</div>
+      <div class="to-note">Click any field to edit. Prices from Home Depot / Bluegrass as of ${escHtml(dateVal)}.</div>
     </div>`;
+}
+
+function toUpdate(idx, field, value) {
+  if (!lastEstimate.takeoff[idx]) return;
+  lastEstimate.takeoff[idx][field] = value;
+}
+
+function toRecalc(idx, rawVal, field) {
+  if (!lastEstimate.takeoff[idx]) return;
+  const val = parseFloat(rawVal) || 0;
+  lastEstimate.takeoff[idx][field] = val;
+  const it = lastEstimate.takeoff[idx];
+  it.total = Math.round((it.qty || 0) * (it.unit_cost || 0));
+  const cell = document.getElementById(`to-rt-${idx}`);
+  if (cell) cell.textContent = fmt(it.total);
+  const grand = lastEstimate.takeoff.reduce((s, x) => s + (x.total || 0), 0);
+  const grandEl = document.getElementById('to-grand-total');
+  if (grandEl) grandEl.textContent = fmt(grand);
+}
+
+function toRemove(idx) {
+  lastEstimate.takeoff.splice(idx, 1);
+  renderTakeoff(lastEstimate);
+}
+
+function toAdd() {
+  const item     = (document.getElementById('to-new-item').value || '').trim();
+  const qty      = parseFloat(document.getElementById('to-new-qty').value) || 0;
+  const unit     = (document.getElementById('to-new-unit').value || 'each').trim();
+  const unitCost = parseFloat(document.getElementById('to-new-cost').value) || 0;
+  const section  = (document.getElementById('to-new-section').value || 'Other').trim();
+  const supplier = (document.getElementById('to-new-supplier').value || '').trim();
+  if (!item) return;
+  if (!lastEstimate.takeoff) lastEstimate.takeoff = [];
+  lastEstimate.takeoff.push({ section, item, qty, unit, unit_cost: unitCost, total: Math.round(qty * unitCost), supplier });
+  renderTakeoff(lastEstimate);
 }
 
 function saveTakeoffPDF() {
