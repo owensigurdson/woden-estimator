@@ -381,7 +381,7 @@ FENCE:
 
 LANDSCAPE:
 - Topsoil (spread, rake, grade): 0.30 hrs per cu yd
-- Sod (lay, butt, edge, roll): 0.08 hrs per sqft
+- Sod (lay, butt, edge, roll): 0.012 hrs per sqft
 - Mulch (spread, edge): 0.20 hrs per cu yd
 
 RETAINING WALL:
